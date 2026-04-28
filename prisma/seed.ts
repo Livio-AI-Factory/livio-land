@@ -8,6 +8,22 @@ async function main() {
 
   // Demo users
   const passwordHash = await bcrypt.hash("demo1234", 10);
+  const adminPasswordHash = await bcrypt.hash("GoLivio2026$", 10);
+
+  // Admin account — granted admin on every seed (idempotent)
+  await prisma.user.upsert({
+    where: { email: "ethan@golivio.com" },
+    update: { isAdmin: true },
+    create: {
+      email: "ethan@golivio.com",
+      passwordHash: adminPasswordHash,
+      name: "Ethan Sargent",
+      company: "Livio",
+      role: "both",
+      isAdmin: true,
+    },
+  });
+
 
   const supplier1 = await prisma.user.upsert({
     where: { email: "ops@northstar-dc.com" },

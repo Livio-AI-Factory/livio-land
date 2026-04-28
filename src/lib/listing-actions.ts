@@ -72,16 +72,13 @@ function fd(formData: FormData) {
 export async function createDcListing(formData: FormData) {
   const user = await getCurrentUser();
   if (!user) redirect("/auth/signin");
-
   const parsed = dcSchema.safeParse(fd(formData));
   if (!parsed.success) {
     return { error: parsed.error.errors[0]?.message || "Invalid input" };
   }
-
   const listing = await prisma.dataCenterListing.create({
     data: { ...parsed.data, ownerId: user.id },
   });
-
   revalidatePath("/listings/dc");
   redirect(`/listings/dc/${listing.id}`);
 }
@@ -89,38 +86,85 @@ export async function createDcListing(formData: FormData) {
 export async function createLandListing(formData: FormData) {
   const user = await getCurrentUser();
   if (!user) redirect("/auth/signin");
-
   const parsed = landSchema.safeParse(fd(formData));
   if (!parsed.success) {
     return { error: parsed.error.errors[0]?.message || "Invalid input" };
   }
-
   const listing = await prisma.poweredLandListing.create({
     data: { ...parsed.data, ownerId: user.id },
   });
-
   revalidatePath("/listings/land");
   redirect(`/listings/land/${listing.id}`);
+}
+
+export async function updateDcListing(id: string, formData: FormData) {
+  const user = await getCurrentUser();
+  if (!user) redirect("/auth/signin");
+  const listing = await prisma.dataCenterListing.findUnique({ where: { id } });
+  if (!listing) return { error: "Listing not found" };
+  if (listing.ownerId !== user.id && !user.isAdmin) {
+    return { error: "Not allowed — only the owner or an admin can edit this listing" };
+  }
+  const parsed = dcSchema.safeParse(fd(formData));
+  if (!parsed.success) {
+    return { error: parsed.error.errors[0]?.message || "Invalid input" };
+  }
+  await prisma.dataCenterListing.update({
+    where: { id },
+    data: parsed.data,
+  });
+  revalidatePath(`/listings/dc/${id}`);
+  revalidatePath("/listings/dc");
+  redirect(`/listings/dc/${id}`);
+}
+
+export async function updateLandListing(id: string, formData: FormData) {
+  const user = await getCurrentUser();
+  if (!user) redirect("/auth/signin");
+  const listing = await prisma.poweredLandListing.findUnique({ where: { id } });
+  if (!listing) return { error: "Listing not found" };
+  if (listing.ownerId !== user.id && !user.isAdmin) {
+    return { error: "Not allowed — only the owner or an admin can edit this listing" };
+  }
+  const parsed = landSchema.safeParse(fd(formData));
+  if (!parsed.success) {
+    return { error: parsed.error.errors[0]?.message || "Invalid input" };
+  }
+  await prisma.poweredLandListing.update({
+    where: { id },
+    data: parsed.data,
+  });
+  revalidatePath(`/listings/land/${id}`);
+  revalidatePath("/listings/land");
+  redirect(`/listings/land/${id}`);
 }
 
 export async function deleteDcListing(id: string) {
   const user = await getCurrentUser();
   if (!user) redirect("/auth/signin");
   const listing = await prisma.dataCenterListing.findUnique({ where: { id } });
-  if (!listing || listing.ownerId !== user.id) return { error: "Not allowed" };
+  if (!listing) return { error: "Not found" };
+  if (listing.ownerId !== user.id && !user.isAdmin) {
+    return { error: "Not allowed" };
+  }
   await prisma.dataCenterListing.delete({ where: { id } });
   revalidatePath("/listings/dc");
   revalidatePath("/dashboard");
+  redirect("/listings/dc");
 }
 
 export async function deleteLandListing(id: string) {
   const user = await getCurrentUser();
   if (!user) redirect("/auth/signin");
   const listing = await prisma.poweredLandListing.findUnique({ where: { id } });
-  if (!listing || listing.ownerId !== user.id) return { error: "Not allowed" };
+  if (!listing) return { error: "Not found" };
+  if (listing.ownerId !== user.id && !user.isAdmin) {
+    return { error: "Not allowed" };
+  }
   await prisma.poweredLandListing.delete({ where: { id } });
   revalidatePath("/listings/land");
   revalidatePath("/dashboard");
+  redirect("/listings/land");
 }
 
 // Q&A
@@ -133,7 +177,6 @@ export async function askQuestion(
   if (!user) redirect("/auth/signin");
   const body = String(formData.get("body") || "").trim();
   if (body.length < 3) return { error: "Question is too short" };
-
   await prisma.question.create({
     data: {
       body,
@@ -156,7 +199,6 @@ export async function answerQuestion(
   if (!user) redirect("/auth/signin");
   const body = String(formData.get("body") || "").trim();
   if (body.length < 1) return { error: "Answer cannot be empty" };
-
   await prisma.answer.create({
     data: { body, questionId, responderId: user.id },
   });

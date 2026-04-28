@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { QAndA } from "@/components/q-and-a";
+import { OwnerActions } from "@/components/owner-actions";
 
 export default async function LandListingDetailPage({
   params,
@@ -50,6 +51,15 @@ export default async function LandListingDetailPage({
             <div className="font-medium text-slate-900">
               {listing.owner.company || listing.owner.name}
             </div>
+            {(isOwner || user?.isAdmin) && (
+              <div className="mt-3 flex justify-end">
+                <OwnerActions
+                  listingType="land"
+                  listingId={listing.id}
+                  isAdmin={!!user?.isAdmin && !isOwner}
+                />
+              </div>
+            )}
           </div>
         </div>
 

@@ -37,6 +37,11 @@ export default async function RootLayout({
               </Link>
               {user ? (
                 <>
+                  {user.isAdmin && (
+                    <span className="rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 border border-red-200">
+                      Admin
+                    </span>
+                  )}
                   <Link href="/dashboard" className="hover:text-brand-600">
                     Dashboard
                   </Link>
