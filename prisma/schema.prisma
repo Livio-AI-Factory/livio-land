@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  company      String?
+  role         String   @default("both") // "supplier" | "offtaker" | "both"
+  createdAt    DateTime @default(now())
+
+  dcListings   DataCenterListing[]
+  landListings PoweredLandListing[]
+  questions    Question[]            @relation("AskedBy")
+  answers      Answer[]
+}
+
+model DataCenterListing {
+  id                String   @id @default(cuid())
+  ownerId           String
+  owner             User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  title             String
+  location          String   // City, State / Region
+  country           String   @default("USA")
+  totalCapacityMW   Float    // Total facility capacity
+  availableMW       Float    // Currently available
+  availabilityDate  DateTime // When capacity is available
+  ratePerKWh        Float?   // $/kWh
+  pricingModel      String   @default("per-kWh") // "per-kWh" | "per-kW-month" | "custom"
+  contractMinYears  Int?
+  tier              String?  // Tier I/II/III/IV
+  pue               Float?   // Power Usage Effectiveness
+  coolingType       String?  // "air" | "liquid" | "immersion" | "hybrid"
+  powerDensityKWPerRack Float?
+  network           String?  // Carrier/connectivity notes
+  certifications    String?  // SOC 2, ISO 27001, etc
+  status            String   @default("available") // "available" | "under-loi" | "leased"
+  description       String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  questions         Question[]
+
+  @@index([location])
+  @@index([availableMW])
+  @@index([availabilityDate])
+}
+
+model PoweredLandListing {
+  id                  String   @id @default(cuid())
+  ownerId             String
+  owner               User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  title               String
+  location            String
+  country             String   @default("USA")
+  acres               Float
+  availableMW         Float    // Power available at site
+  utilityProvider     String?
+  substationDistanceMiles Float?
+  ppaStatus           String?  // "signed" | "in-negotiation" | "available" | "none"
+  ppaPricePerMWh      Float?
+  interconnectionStage String? // "study" | "facility-study" | "LGIA" | "energized"
+  expectedEnergization DateTime?
+  waterAvailable      String?  // "yes" | "limited" | "no" | "unknown"
+  waterSourceNotes    String?
+  fiberAvailable      String?  // "yes" | "near" | "no" | "unknown"
+  zoning              String?
+  askingPrice         Float?
+  pricingModel        String   @default("sale") // "sale" | "lease" | "JV"
+  status              String   @default("available")
+  description         String?
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  questions           Question[]
+
+  @@index([location])
+  @@index([availableMW])
+}
+
+model Question {
+  id          String   @id @default(cuid())
+  body        String
+  askerId     String
+  asker       User     @relation("AskedBy", fields: [askerId], references: [id], onDelete: Cascade)
+
+  // Polymorphic - either dc or land listing (one will be null)
+  dcListingId   String?
+  dcListing     DataCenterListing?  @relation(fields: [dcListingId], references: [id], onDelete: Cascade)
+  landListingId String?
+  landListing   PoweredLandListing? @relation(fields: [landListingId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  answers     Answer[]
+
+  @@index([dcListingId])
+  @@index([landListingId])
+}
+
+model Answer {
+  id          String   @id @default(cuid())
+  body        String
+  questionId  String
+  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  responderId String
+  responder   User     @relation(fields: [responderId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@index([questionId])
+}

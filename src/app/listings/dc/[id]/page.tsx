@@ -1,0 +1,156 @@
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { prisma } from "@/lib/db";
+import { getCurrentUser } from "@/lib/session";
+import { QAndA } from "@/components/q-and-a";
+
+export default async function DcListingDetailPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const listing = await prisma.dataCenterListing.findUnique({
+    where: { id: params.id },
+    include: {
+      owner: { select: { id: true, name: true, company: true, email: true } },
+      questions: {
+        orderBy: { createdAt: "desc" },
+        include: {
+          asker: { select: { name: true, company: true } },
+          answers: {
+            orderBy: { createdAt: "asc" },
+            include: { responder: { select: { name: true, company: true } } },
+          },
+        },
+      },
+    },
+  });
+
+  if (!listing) notFound();
+  const user = await getCurrentUser();
+  const isOwner = user?.id === listing.ownerId;
+
+  return (
+    <div className="mx-auto max-w-5xl px-4 py-10">
+      <Link href="/listings/dc" className="text-sm text-brand-600 hover:underline">
+        ← Back to DC capacity
+      </Link>
+
+      <div className="mt-4 rounded-xl border border-slate-200 bg-white p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
+              Data Center Capacity
+            </span>
+            <h1 className="mt-2 text-2xl font-bold text-slate-900">{listing.title}</h1>
+            <p className="text-slate-600">{listing.location}, {listing.country}</p>
+          </div>
+          <div className="text-right text-sm text-slate-600">
+            <div>Listed by</div>
+            <div className="font-medium text-slate-900">
+              {listing.owner.company || listing.owner.name}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-slate-200 pt-6">
+          <Stat label="Available" value={`${listing.availableMW} MW`} highlight />
+          <Stat label="Total capacity" value={`${listing.totalCapacityMW} MW`} />
+          <Stat
+            label="Available from"
+            value={new Date(listing.availabilityDate).toLocaleDateString()}
+          />
+          <Stat
+            label="Rate"
+            value={
+              listing.ratePerKWh
+                ? `$${listing.ratePerKWh.toFixed(3)}/kWh`
+                : "On request"
+            }
+          />
+        </div>
+
+        {listing.description && (
+          <div className="mt-6 border-t border-slate-200 pt-6">
+            <h2 className="font-semibold text-slate-900">About</h2>
+            <p className="mt-2 whitespace-pre-wrap text-slate-700">
+              {listing.description}
+            </p>
+          </div>
+        )}
+
+        <div className="mt-6 border-t border-slate-200 pt-6 grid grid-cols-2 md:grid-cols-3 gap-4">
+          <Stat label="Tier" value={listing.tier || "—"} />
+          <Stat label="PUE" value={listing.pue?.toString() || "—"} />
+          <Stat label="Cooling" value={listing.coolingType || "—"} />
+          <Stat
+            label="Density"
+            value={
+              listing.powerDensityKWPerRack
+                ? `${listing.powerDensityKWPerRack} kW/rack`
+                : "—"
+            }
+          />
+          <Stat label="Pricing" value={listing.pricingModel} />
+          <Stat
+            label="Min term"
+            value={
+              listing.contractMinYears ? `${listing.contractMinYears} years` : "—"
+            }
+          />
+        </div>
+
+        {(listing.network || listing.certifications) && (
+          <div className="mt-6 border-t border-slate-200 pt-6 space-y-3 text-sm">
+            {listing.network && (
+              <div>
+                <span className="font-medium text-slate-900">Network: </span>
+                <span className="text-slate-700">{listing.network}</span>
+              </div>
+            )}
+            {listing.certifications && (
+              <div>
+                <span className="font-medium text-slate-900">Certifications: </span>
+                <span className="text-slate-700">{listing.certifications}</span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <QAndA
+        listingType="dc"
+        listingId={listing.id}
+        listingOwnerId={listing.ownerId}
+        questions={listing.questions}
+        currentUser={user}
+        isOwner={isOwner}
+      />
+    </div>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+}) {
+  return (
+    <div>
+      <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
+      <div
+        className={
+          highlight
+            ? "text-xl font-bold text-brand-700"
+            : "text-base font-medium text-slate-900"
+        }
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
