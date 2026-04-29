@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { QAndA } from "@/components/q-and-a";
 import { OwnerActions } from "@/components/owner-actions";
+import { MessageForm } from "@/components/message-form";
+import { LocationCard } from "@/components/location-card";
 
 export default async function DcListingDetailPage({
   params,
@@ -80,6 +82,17 @@ export default async function DcListingDetailPage({
           />
         </div>
 
+        <LocationCard
+          location={listing.location}
+          country={listing.country}
+          county={listing.county}
+          state={listing.state}
+          postalCode={listing.postalCode}
+          streetAddress={listing.streetAddress}
+          latitude={listing.latitude}
+          longitude={listing.longitude}
+          isOwnerOrAdmin={isOwner || !!user?.isAdmin}
+        />
         {listing.description && (
           <div className="mt-6 border-t border-slate-200 pt-6">
             <h2 className="font-semibold text-slate-900">About</h2>
@@ -128,6 +141,7 @@ export default async function DcListingDetailPage({
         )}
       </div>
 
+      <div className="mt-6"><MessageForm listingType="dc" listingId={listing.id} ownerName={listing.owner.company || listing.owner.name} isSignedIn={!!user} isOwner={isOwner} /></div>
       <QAndA
         listingType="dc"
         listingId={listing.id}

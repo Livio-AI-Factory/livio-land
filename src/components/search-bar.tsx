@@ -24,18 +24,21 @@ export function SearchBar({
     <form
       action={basePath}
       method="get"
-      className="rounded-xl border border-slate-200 bg-white p-4"
+      className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
     >
-      <div className="grid gap-3 md:grid-cols-4 lg:grid-cols-5">
+      <div
+        className="grid gap-3"
+        style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}
+      >
         {fields.map((f) => (
-          <div key={f.name}>
-            <label className="block text-xs font-medium text-slate-600 mb-1">
+          <div key={f.name} className="flex flex-col gap-1">
+            <label className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
               {f.label}
             </label>
             {f.type === "select" ? (
               <select
                 name={f.name}
-                className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="h-9 rounded-md border border-slate-300 px-2 text-sm bg-white text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100 transition"
               >
                 {f.options.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -49,16 +52,18 @@ export function SearchBar({
                 name={f.name}
                 step={(f as InputField).step}
                 placeholder={f.placeholder}
-                className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="h-9 rounded-md border border-slate-300 px-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100 transition"
               />
             )}
           </div>
         ))}
+      </div>
+      <div className="mt-4 flex justify-end">
         <button
           type="submit"
-          className="self-end rounded-md bg-brand-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
+          className="rounded-md bg-slate-900 hover:bg-slate-800 px-5 py-2 text-sm font-medium text-white transition"
         >
-          Search
+          Apply filters
         </button>
       </div>
     </form>

@@ -30,6 +30,19 @@ export default async function NewDcListingPage() {
             />
           </FormSection>
 
+          <FormSection title="Site Location">
+            <FormField name="streetAddress" label="Street address (private — used for due diligence only)" placeholder="42 Industrial Pkwy" />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField name="county" label="County" placeholder="Loudoun" />
+              <FormField name="state" label="State" placeholder="VA" />
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <FormField name="postalCode" label="ZIP" placeholder="20147" />
+              <FormField name="latitude" label="Latitude" type="number" step="0.000001" placeholder="39.0438" />
+              <FormField name="longitude" label="Longitude" type="number" step="0.000001" placeholder="-77.4874" />
+            </div>
+          </FormSection>
+
           <FormSection title="Capacity & Availability">
             <div className="grid grid-cols-2 gap-4">
               <FormField name="totalCapacityMW" label="Total facility MW" type="number" step="0.1" required />

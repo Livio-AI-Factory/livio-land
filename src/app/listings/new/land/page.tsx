@@ -30,6 +30,19 @@ export default async function NewLandListingPage() {
             />
           </FormSection>
 
+          <FormSection title="Site Location">
+            <FormField name="streetAddress" label="Street address (private — used for due diligence only)" placeholder="" />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField name="county" label="County" placeholder="Taylor" />
+              <FormField name="state" label="State" placeholder="TX" />
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <FormField name="postalCode" label="ZIP" placeholder="79601" />
+              <FormField name="latitude" label="Latitude" type="number" step="0.000001" placeholder="32.4487" />
+              <FormField name="longitude" label="Longitude" type="number" step="0.000001" placeholder="-99.7331" />
+            </div>
+          </FormSection>
+
           <FormSection title="Land & Power">
             <div className="grid grid-cols-2 gap-4">
               <FormField name="acres" label="Acres" type="number" step="0.1" required />

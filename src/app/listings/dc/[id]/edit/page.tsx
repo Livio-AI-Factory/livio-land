@@ -84,6 +84,19 @@ export default async function EditDcListingPage({
             />
           </FormSection>
 
+          <FormSection title="Site Location">
+            <FormField name="streetAddress" label="Street address (private)" defaultValue={listing.streetAddress ?? ""} />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField name="county" label="County" defaultValue={listing.county ?? ""} />
+              <FormField name="state" label="State" defaultValue={listing.state ?? ""} />
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <FormField name="postalCode" label="ZIP" defaultValue={listing.postalCode ?? ""} />
+              <FormField name="latitude" label="Latitude" type="number" step="0.000001" defaultValue={listing.latitude != null ? String(listing.latitude) : ""} />
+              <FormField name="longitude" label="Longitude" type="number" step="0.000001" defaultValue={listing.longitude != null ? String(listing.longitude) : ""} />
+            </div>
+          </FormSection>
+
           <FormSection title="Capacity & Availability">
             <div className="grid grid-cols-2 gap-4">
               <FormField

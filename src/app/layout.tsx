@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 import { getCurrentUser } from "@/lib/session";
 import { signout } from "@/lib/auth-actions";
+import { prisma } from "@/lib/db";
 
 export const metadata: Metadata = {
   title: "Livio Land — Powered Land & Data Center Capacity Marketplace",
@@ -16,9 +20,14 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const user = await getCurrentUser();
+  const unreadCount = user
+    ? await prisma.message.count({
+        where: { recipientId: user.id, read: false },
+      })
+    : 0;
 
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable}>
       <body>
         <header className="border-b border-slate-200 bg-white">
           <div className="mx-auto max-w-7xl px-4 py-4 flex items-center justify-between">
@@ -42,6 +51,14 @@ export default async function RootLayout({
                       Admin
                     </span>
                   )}
+                  <Link href="/inbox" className="relative hover:text-brand-600">
+                    Inbox
+                    {unreadCount > 0 && (
+                      <span className="ml-1 inline-flex items-center justify-center rounded-full bg-brand-600 text-white text-[10px] font-medium px-1.5 py-0.5 align-top">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </Link>
                   <Link href="/dashboard" className="hover:text-brand-600">
                     Dashboard
                   </Link>

@@ -21,6 +21,8 @@ model User {
   landListings PoweredLandListing[]
   questions    Question[]            @relation("AskedBy")
   answers      Answer[]
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
 }
 
 model DataCenterListing {
@@ -31,6 +33,12 @@ model DataCenterListing {
   title             String
   location          String   // City, State / Region
   country           String   @default("USA")
+  streetAddress     String?
+  county            String?
+  state             String?
+  postalCode        String?
+  latitude          Float?
+  longitude         Float?
   totalCapacityMW   Float    // Total facility capacity
   availableMW       Float    // Currently available
   availabilityDate  DateTime // When capacity is available
@@ -50,6 +58,7 @@ model DataCenterListing {
   updatedAt         DateTime @updatedAt
 
   questions         Question[]
+  messages          Message[]
 
   @@index([location])
   @@index([availableMW])
@@ -64,6 +73,12 @@ model PoweredLandListing {
   title               String
   location            String
   country             String   @default("USA")
+  streetAddress       String?
+  county              String?
+  state               String?
+  postalCode          String?
+  latitude            Float?
+  longitude           Float?
   acres               Float
   availableMW         Float    // Power available at site
   utilityProvider     String?
@@ -85,6 +100,7 @@ model PoweredLandListing {
   updatedAt           DateTime @updatedAt
 
   questions           Question[]
+  messages            Message[]
 
   @@index([location])
   @@index([availableMW])
@@ -119,4 +135,24 @@ model Answer {
   createdAt   DateTime @default(now())
 
   @@index([questionId])
+}
+
+model Message {
+  id            String   @id @default(cuid())
+  body          String
+  senderId      String
+  sender        User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  recipientId   String
+  recipient     User     @relation("ReceivedMessages", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  dcListingId   String?
+  dcListing     DataCenterListing?  @relation(fields: [dcListingId], references: [id], onDelete: SetNull)
+  landListingId String?
+  landListing   PoweredLandListing? @relation(fields: [landListingId], references: [id], onDelete: SetNull)
+
+  read          Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  @@index([recipientId, read])
+  @@index([senderId])
 }

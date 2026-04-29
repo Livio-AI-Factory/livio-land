@@ -5,6 +5,7 @@ import { prisma } from "./db";
 import { getCurrentUser } from "./session";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { sendEmail as _sendEmail } from "./email";
 
 // Helpers
 const optStr = z
@@ -27,6 +28,12 @@ const dcSchema = z.object({
   title: z.string().min(3),
   location: z.string().min(2),
   country: z.string().default("USA"),
+  streetAddress: optStr,
+  county: optStr,
+  state: optStr,
+  postalCode: optStr,
+  latitude: optNum,
+  longitude: optNum,
   totalCapacityMW: reqNum,
   availableMW: reqNum,
   availabilityDate: reqDate,
@@ -46,6 +53,12 @@ const landSchema = z.object({
   title: z.string().min(3),
   location: z.string().min(2),
   country: z.string().default("USA"),
+  streetAddress: optStr,
+  county: optStr,
+  state: optStr,
+  postalCode: optStr,
+  latitude: optNum,
+  longitude: optNum,
   acres: reqNum,
   availableMW: reqNum,
   utilityProvider: optStr,
@@ -203,4 +216,91 @@ export async function answerQuestion(
     data: { body, questionId, responderId: user.id },
   });
   revalidatePath(`/listings/${listingType}/${listingId}`);
+}
+
+// --- Messaging ---
+export async function sendMessage(
+  listingType: "dc" | "land",
+  listingId: string,
+  formData: FormData
+) {
+  const user = await getCurrentUser();
+  if (!user) redirect("/auth/signin");
+  const body = String(formData.get("body") || "").trim();
+  if (body.length < 5) {
+    return { error: "Message is too short" };
+  }
+  if (body.length > 4000) {
+    return { error: "Message is too long" };
+  }
+
+  const listing =
+    listingType === "dc"
+      ? await prisma.dataCenterListing.findUnique({
+          where: { id: listingId },
+          include: { owner: { select: { id: true, email: true, name: true } } },
+        })
+      : await prisma.poweredLandListing.findUnique({
+          where: { id: listingId },
+          include: { owner: { select: { id: true, email: true, name: true } } },
+        });
+
+  if (!listing) return { error: "Listing not found" };
+  if (listing.ownerId === user.id) {
+    return { error: "You can't message yourself on your own listing" };
+  }
+
+  const msg = await prisma.message.create({
+    data: {
+      body,
+      senderId: user.id,
+      recipientId: listing.ownerId,
+      ...(listingType === "dc"
+        ? { dcListingId: listingId }
+        : { landListingId: listingId }),
+    },
+  });
+
+  // Build the listing URL for the email (best-effort; defaults to relative)
+  const base =
+    process.env.NEXT_PUBLIC_BASE_URL ||
+    process.env.RAILWAY_PUBLIC_DOMAIN
+      ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+      : "";
+  const listingUrl = `${base}/listings/${listingType}/${listingId}`;
+  const inboxUrl = `${base}/inbox`;
+  const senderLabel =
+    user.company ? `${user.name} (${user.company})` : user.name;
+
+  await _sendEmail({
+    to: listing.owner.email,
+    subject: `New message about "${listing.title}" — Livio Land`,
+    html: `
+      <div style="font-family: -apple-system, Helvetica, sans-serif; max-width: 560px; margin: auto; color: #0f172a;">
+        <h2 style="font-size: 18px; font-weight: 600; margin: 0 0 12px;">New message from ${senderLabel}</h2>
+        <p style="font-size: 14px; color: #475569; margin: 0 0 16px;">
+          About your listing: <a href="${listingUrl}" style="color: #0284c7;">${listing.title}</a>
+        </p>
+        <div style="border-left: 3px solid #0284c7; padding: 12px 16px; background: #f8fafc; border-radius: 4px; white-space: pre-wrap; font-size: 15px;">
+          ${body.replace(/&/g,"&amp;").replace(/</g,"&lt;")}
+        </div>
+        <p style="margin: 24px 0 0; font-size: 13px; color: #64748b;">
+          Reply directly via your <a href="${inboxUrl}" style="color: #0284c7;">Livio Land inbox</a>.
+        </p>
+      </div>
+    `,
+  });
+
+  revalidatePath(`/listings/${listingType}/${listingId}`);
+  return { ok: true, messageId: msg.id };
+}
+
+export async function markMessageRead(messageId: string) {
+  const user = await getCurrentUser();
+  if (!user) redirect("/auth/signin");
+  await prisma.message.updateMany({
+    where: { id: messageId, recipientId: user.id },
+    data: { read: true },
+  });
+  revalidatePath("/inbox");
 }

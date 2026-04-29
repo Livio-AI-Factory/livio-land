@@ -22,7 +22,7 @@ export default async function HomePage() {
   return (
     <div>
       {/* Hero */}
-      <section className="bg-gradient-to-br from-brand-50 via-white to-emerald-50 border-b border-slate-200">
+      <section className="bg-hero-gradient border-b border-slate-200">
         <div className="mx-auto max-w-7xl px-4 py-20">
           <div className="max-w-3xl">
             <span className="inline-block rounded-full bg-white border border-slate-200 px-3 py-1 text-xs font-medium text-slate-700">
