@@ -7,6 +7,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swa
 import { getCurrentUser } from "@/lib/session";
 import { signout } from "@/lib/auth-actions";
 import { prisma } from "@/lib/db";
+import { getProfilePhotoUrl } from "@/lib/profile-actions";
 
 export const metadata: Metadata = {
   title: "Livio Land — Powered Land & Data Center Capacity Marketplace",
@@ -25,6 +26,7 @@ export default async function RootLayout({
         where: { recipientId: user.id, read: false },
       })
     : 0;
+  const profilePhotoUrl = user ? await getProfilePhotoUrl(user.profilePhotoKey) : null;
 
   return (
     <html lang="en" className={inter.variable}>
@@ -67,6 +69,24 @@ export default async function RootLayout({
                     className="rounded-md bg-brand-600 px-3 py-1.5 text-white hover:bg-brand-700"
                   >
                     + List a site
+                  </Link>
+                  <Link
+                    href="/profile"
+                    className="flex items-center gap-2 hover:text-brand-600"
+                    title="Your profile"
+                  >
+                    <span className="inline-flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-sm font-semibold text-slate-600">
+                      {profilePhotoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={profilePhotoUrl}
+                          alt={user.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        user.name.slice(0, 1).toUpperCase()
+                      )}
+                    </span>
                   </Link>
                   <form action={signout}>
                     <button

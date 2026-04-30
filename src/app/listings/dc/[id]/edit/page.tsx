@@ -9,9 +9,12 @@ import { getListingPhotos } from "@/lib/photo-actions";
 
 export default async function EditDcListingPage({
   params,
+  searchParams,
 }: {
   params: { id: string };
+  searchParams?: { fresh?: string };
 }) {
+  const justCreated = searchParams?.fresh === "1";
   const user = await getCurrentUser();
   if (!user) redirect("/auth/signin");
   const listing = await prisma.dataCenterListing.findUnique({
@@ -47,16 +50,27 @@ export default async function EditDcListingPage({
       >
         ← Back to listing
       </Link>
-      <h1 className="mt-4 text-3xl font-bold text-slate-900">Edit DC Listing</h1>
+      <h1 className="mt-4 text-3xl font-bold text-slate-900">
+        {justCreated ? "Add photos and finish your listing" : "Edit DC Listing"}
+      </h1>
       <p className="mt-2 text-slate-600">
         {user.isAdmin && listing.ownerId !== user.id ? (
           <span className="rounded-md bg-red-50 px-2 py-0.5 text-sm text-red-700">
             Admin edit
           </span>
+        ) : justCreated ? (
+          "Listing saved as a draft. Add facility photos, drone shots, certifications, or one-pagers below — these are what off-takers see when they open your listing. Then click Save changes."
         ) : (
           "Update the details below. Off-takers will see your changes immediately."
         )}
       </p>
+      {justCreated && (
+        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <strong className="font-semibold">Pending admin review.</strong> Your listing is hidden
+          from public browse until an admin approves it. Adding good photos and a complete
+          description makes review faster.
+        </div>
+      )}
       <div className="mt-8">
         <ListingForm action={update} submitLabel="Save changes">
           <FormSection title="Overview">

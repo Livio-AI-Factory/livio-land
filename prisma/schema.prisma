@@ -8,14 +8,15 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  name         String
-  company      String?
-  role         String   @default("both") // "supplier" | "offtaker" | "both"
-  isAdmin      Boolean  @default(false)
-  createdAt    DateTime @default(now())
+  id              String   @id @default(cuid())
+  email           String   @unique
+  passwordHash    String
+  name            String
+  company         String?
+  role            String   @default("both") // "supplier" | "offtaker" | "both"
+  isAdmin         Boolean  @default(false)
+  profilePhotoKey String?  // R2 key for profile picture, e.g. "users/{userId}/profile-{cuid}.jpg"
+  createdAt       DateTime @default(now())
 
   // Latest MNDA signature this user has on file (denormalised for fast checks)
   mndaSignedAt      DateTime?

@@ -35,6 +35,7 @@ export async function getCurrentUser() {
       name: true,
       company: true,
       isAdmin: true,
+      profilePhotoKey: true,
     },
   });
   return user;

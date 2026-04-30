@@ -93,7 +93,9 @@ export async function createDcListing(formData: FormData) {
     data: { ...parsed.data, ownerId: user.id },
   });
   revalidatePath("/listings/dc");
-  redirect(`/listings/dc/${listing.id}`);
+  // Send the user to the edit page so they can add photos and any final
+  // details before the listing is reviewed by an admin.
+  redirect(`/listings/dc/${listing.id}/edit?fresh=1`);
 }
 
 export async function createLandListing(formData: FormData) {
@@ -107,7 +109,7 @@ export async function createLandListing(formData: FormData) {
     data: { ...parsed.data, ownerId: user.id },
   });
   revalidatePath("/listings/land");
-  redirect(`/listings/land/${listing.id}`);
+  redirect(`/listings/land/${listing.id}/edit?fresh=1`);
 }
 
 export async function updateDcListing(id: string, formData: FormData) {
