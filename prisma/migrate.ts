@@ -39,6 +39,32 @@ const DEMO_SUPPLIER_EMAILS = [
 async function main() {
   console.log("→ Running post-deploy migrations...");
 
+  // 0. Normalize all stored emails to lowercase. Fixes the bug where a user
+  //    signed up as "Ethan@golivio.com" couldn't sign back in because the
+  //    DB lookup was case-sensitive but the form preserved the user's casing.
+  //    Going forward auth-actions.ts lowercases on both signup and signin,
+  //    so this only runs work on legacy mixed-case rows.
+  const allUsers = await prisma.user.findMany({
+    select: { id: true, email: true },
+  });
+  let lowercased = 0;
+  for (const u of allUsers) {
+    const lower = u.email.trim().toLowerCase();
+    if (lower !== u.email) {
+      // Skip if a lowercase version already exists (would violate unique).
+      const collision = await prisma.user.findUnique({ where: { email: lower } });
+      if (collision && collision.id !== u.id) {
+        console.warn(`  ⚠ Email collision on ${u.email} → ${lower}, skipping`);
+        continue;
+      }
+      await prisma.user.update({ where: { id: u.id }, data: { email: lower } });
+      lowercased++;
+    }
+  }
+  if (lowercased > 0) {
+    console.log(`  ✓ Lowercased ${lowercased} email addresses`);
+  }
+
   // 1. Backfill: any DC/Land listing created before approvalStatus existed will
   //    have approvalStatus="pending" (the schema default). Auto-approve those
   //    so the public site still shows them. NEW listings created after this

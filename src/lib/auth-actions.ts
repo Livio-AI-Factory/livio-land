@@ -8,8 +8,15 @@ import { getSession } from "./session";
 import { redirect } from "next/navigation";
 import { MNDA_VERSION } from "@/content/mnda";
 
+// Normalize emails to lowercase so casing differences (Ethan@x.com vs
+// ethan@x.com) never block a sign-in. Applied on both signup and signin.
+const emailField = z
+  .string()
+  .email()
+  .transform((s) => s.trim().toLowerCase());
+
 const signupSchema = z.object({
-  email: z.string().email(),
+  email: emailField,
   password: z.string().min(8, "Password must be at least 8 characters"),
   name: z.string().min(1, "Name is required"),
   company: z.string().min(1, "Company is required"),
@@ -20,7 +27,7 @@ const signupSchema = z.object({
 });
 
 const signinSchema = z.object({
-  email: z.string().email(),
+  email: emailField,
   password: z.string().min(1, "Password is required"),
 });
 
