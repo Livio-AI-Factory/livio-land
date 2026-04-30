@@ -182,6 +182,47 @@ export async function deleteLandListing(id: string) {
   redirect("/listings/land");
 }
 
+// "Post listing" — owner explicit submission for admin review.
+// The listing already enters approvalStatus="pending" the moment it's saved,
+// so this action mainly (a) bumps updatedAt so admins see freshly-submitted
+// listings at the top of the queue and (b) drops the user on a confirmation
+// page so they know it's been submitted. Already-approved listings are no-ops.
+export async function postDcListing(id: string) {
+  const user = await getCurrentUser();
+  if (!user) redirect("/auth/signin");
+  const listing = await prisma.dataCenterListing.findUnique({ where: { id } });
+  if (!listing) return { error: "Not found" };
+  if (listing.ownerId !== user.id && !user.isAdmin) {
+    return { error: "Not allowed" };
+  }
+  if (listing.approvalStatus === "pending") {
+    await prisma.dataCenterListing.update({
+      where: { id },
+      data: { updatedAt: new Date() },
+    });
+  }
+  revalidatePath(`/listings/dc/${id}`);
+  redirect(`/listings/dc/${id}?posted=1`);
+}
+
+export async function postLandListing(id: string) {
+  const user = await getCurrentUser();
+  if (!user) redirect("/auth/signin");
+  const listing = await prisma.poweredLandListing.findUnique({ where: { id } });
+  if (!listing) return { error: "Not found" };
+  if (listing.ownerId !== user.id && !user.isAdmin) {
+    return { error: "Not allowed" };
+  }
+  if (listing.approvalStatus === "pending") {
+    await prisma.poweredLandListing.update({
+      where: { id },
+      data: { updatedAt: new Date() },
+    });
+  }
+  revalidatePath(`/listings/land/${id}`);
+  redirect(`/listings/land/${id}?posted=1`);
+}
+
 // Q&A
 export async function askQuestion(
   listingType: "dc" | "land",

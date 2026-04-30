@@ -5,15 +5,18 @@ import { getCurrentUser } from "@/lib/session";
 import { QAndA } from "@/components/q-and-a";
 import { OwnerActions } from "@/components/owner-actions";
 import { MessageForm } from "@/components/message-form";
-import { LocationCard } from "@/components/location-card";
 import { PhotoUpload } from "@/components/photo-upload";
 import { getListingPhotos } from "@/lib/photo-actions";
+import { postDcListing } from "@/lib/listing-actions";
 
 export default async function DcListingDetailPage({
   params,
+  searchParams,
 }: {
   params: { id: string };
+  searchParams?: { posted?: string };
 }) {
+  const justPosted = searchParams?.posted === "1";
   const listing = await prisma.dataCenterListing.findUnique({
     where: { id: params.id },
     include: {
@@ -41,6 +44,45 @@ export default async function DcListingDetailPage({
       <Link href="/listings/dc" className="text-sm text-brand-600 hover:underline">
         ← Back to DC capacity
       </Link>
+
+      {/* Owner-only status banner: shows pending/approved state and a Post
+          button when there's something to do. Hidden from public viewers. */}
+      {isOwner && (
+        <div className="mt-4">
+          {justPosted ? (
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+              <strong className="font-semibold">✓ Posted.</strong> Your listing is in the
+              admin review queue. We'll email you when it's approved and visible to off-takers.
+            </div>
+          ) : listing.approvalStatus === "pending" ? (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              <div>
+                <strong className="font-semibold">Draft — not yet visible.</strong> Click
+                Post to submit for admin review. Make sure photos and key details are filled
+                in first.
+              </div>
+              <form action={postDcListing.bind(null, listing.id)}>
+                <button
+                  type="submit"
+                  className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+                >
+                  Post listing
+                </button>
+              </form>
+            </div>
+          ) : listing.approvalStatus === "approved" ? (
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+              <strong className="font-semibold">✓ Live.</strong> Your listing is visible to
+              off-takers in the DC-capacity marketplace.
+            </div>
+          ) : (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+              <strong className="font-semibold">Listing rejected.</strong> An admin has
+              rejected this listing. Edit and re-post to try again.
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="mt-4 rounded-xl border border-slate-200 bg-white p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -85,17 +127,6 @@ export default async function DcListingDetailPage({
           />
         </div>
 
-        <LocationCard
-          location={listing.location}
-          country={listing.country}
-          county={listing.county}
-          state={listing.state}
-          postalCode={listing.postalCode}
-          streetAddress={listing.streetAddress}
-          latitude={listing.latitude}
-          longitude={listing.longitude}
-          isOwnerOrAdmin={isOwner || !!user?.isAdmin}
-        />
         {(photos.length > 0 || isOwner) && (
           <div className="mt-6 border-t border-slate-200 pt-6">
             <h2 className="font-semibold text-slate-900">Site photos &amp; documents</h2>
