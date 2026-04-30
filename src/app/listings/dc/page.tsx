@@ -18,7 +18,11 @@ interface Props {
 
 export default async function DcListingsPage({ searchParams }: Props) {
   const f = searchParams;
-  const where: Prisma.DataCenterListingWhereInput = { status: "available" };
+  // Only approved listings show up in public browse. Admins see everything via /admin.
+  const where: Prisma.DataCenterListingWhereInput = {
+    status: "available",
+    approvalStatus: "approved",
+  };
   if (f.q) {
     where.OR = [
       { title: { contains: f.q } },

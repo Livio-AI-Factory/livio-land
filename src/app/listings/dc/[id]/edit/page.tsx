@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { updateDcListing } from "@/lib/listing-actions";
 import { ListingForm, FormField, FormSection } from "@/components/listing-form";
+import { PhotoUpload } from "@/components/photo-upload";
+import { getListingPhotos } from "@/lib/photo-actions";
 
 export default async function EditDcListingPage({
   params,
@@ -35,6 +37,7 @@ export default async function EditDcListingPage({
   const update = updateDcListing.bind(null, listing.id);
   const isoDate = (d: Date | null | undefined) =>
     d ? new Date(d).toISOString().slice(0, 10) : "";
+  const photos = await getListingPhotos("dc", listing.id);
 
   return (
     <div className="mx-auto max-w-3xl py-10 px-4">
@@ -211,6 +214,17 @@ export default async function EditDcListingPage({
             />
           </FormSection>
         </ListingForm>
+      </div>
+
+      <div className="mt-10 rounded-lg border border-slate-200 bg-white p-6">
+        <h2 className="text-lg font-semibold text-slate-900">Site photos &amp; documents</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Off-takers will see these on the listing page once it&rsquo;s approved. Drone shots,
+          substation diagrams, and utility LOIs (PDF) are all welcome.
+        </p>
+        <div className="mt-4">
+          <PhotoUpload type="dc" listingId={listing.id} photos={photos} canEdit={true} />
+        </div>
       </div>
     </div>
   );

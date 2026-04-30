@@ -2,16 +2,21 @@
 
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { headers } from "next/headers";
 import { prisma } from "./db";
 import { getSession } from "./session";
 import { redirect } from "next/navigation";
+import { MNDA_VERSION } from "@/content/mnda";
 
 const signupSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8, "Password must be at least 8 characters"),
   name: z.string().min(1, "Name is required"),
-  company: z.string().optional(),
+  company: z.string().min(1, "Company is required"),
   role: z.enum(["supplier", "offtaker", "both"]).default("both"),
+  mndaAccepted: z.literal("1", {
+    errorMap: () => ({ message: "You must accept the MNDA to create an account" }),
+  }),
 });
 
 const signinSchema = z.object({
@@ -24,8 +29,9 @@ export async function signup(formData: FormData) {
     email: formData.get("email"),
     password: formData.get("password"),
     name: formData.get("name"),
-    company: formData.get("company") || undefined,
+    company: formData.get("company"),
     role: formData.get("role") || "both",
+    mndaAccepted: formData.get("mndaAccepted"),
   });
 
   if (!parsed.success) {
@@ -40,6 +46,17 @@ export async function signup(formData: FormData) {
   }
 
   const passwordHash = await bcrypt.hash(parsed.data.password, 10);
+
+  // Capture client metadata for the MNDA signature audit trail.
+  const headerBag = await headers();
+  const forwardedFor = headerBag.get("x-forwarded-for");
+  const realIp = headerBag.get("x-real-ip");
+  const ipAddress = forwardedFor?.split(",")[0]?.trim() || realIp || null;
+  const userAgent = headerBag.get("user-agent") || null;
+  const now = new Date();
+
+  // Create the user AND their MNDA signature in a single transaction so
+  // signup is atomic — either both succeed or neither does.
   const user = await prisma.user.create({
     data: {
       email: parsed.data.email,
@@ -47,6 +64,18 @@ export async function signup(formData: FormData) {
       name: parsed.data.name,
       company: parsed.data.company,
       role: parsed.data.role,
+      mndaSignedAt: now,
+      mndaSignedVersion: MNDA_VERSION,
+      mndaSignatures: {
+        create: {
+          fullName: parsed.data.name,
+          company: parsed.data.company,
+          ipAddress,
+          userAgent,
+          mndaVersion: MNDA_VERSION,
+          signedAt: now,
+        },
+      },
     },
   });
 
@@ -56,7 +85,9 @@ export async function signup(formData: FormData) {
   session.name = user.name;
   await session.save();
 
-  redirect("/dashboard");
+  // Honor the ?next= URL if the user was bounced here from a gated page.
+  const next = (formData.get("next") as string | null)?.trim();
+  redirect(next && next.startsWith("/") ? next : "/dashboard");
 }
 
 export async function signin(formData: FormData) {

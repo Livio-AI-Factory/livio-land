@@ -17,12 +17,19 @@ model User {
   isAdmin      Boolean  @default(false)
   createdAt    DateTime @default(now())
 
+  // Latest MNDA signature this user has on file (denormalised for fast checks)
+  mndaSignedAt      DateTime?
+  mndaSignedVersion String?
+
   dcListings   DataCenterListing[]
   landListings PoweredLandListing[]
   questions    Question[]            @relation("AskedBy")
   answers      Answer[]
   sentMessages     Message[] @relation("SentMessages")
   receivedMessages Message[] @relation("ReceivedMessages")
+  mndaSignatures   MndaSignature[]
+  approvedDc       DataCenterListing[]  @relation("ApprovedDcListings")
+  approvedLand     PoweredLandListing[] @relation("ApprovedLandListings")
 }
 
 model DataCenterListing {
@@ -54,15 +61,24 @@ model DataCenterListing {
   status            String   @default("available") // "available" | "under-loi" | "leased"
   description       String?
 
+  // Admin approval workflow
+  approvalStatus    String   @default("pending") // "pending" | "approved" | "rejected"
+  approvedAt        DateTime?
+  approvedById      String?
+  approvedBy        User?    @relation("ApprovedDcListings", fields: [approvedById], references: [id], onDelete: SetNull)
+  rejectionReason   String?
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
   questions         Question[]
   messages          Message[]
+  photos            ListingPhoto[]
 
   @@index([location])
   @@index([availableMW])
   @@index([availabilityDate])
+  @@index([approvalStatus])
 }
 
 model PoweredLandListing {
@@ -96,14 +112,23 @@ model PoweredLandListing {
   status              String   @default("available")
   description         String?
 
+  // Admin approval workflow
+  approvalStatus    String   @default("pending") // "pending" | "approved" | "rejected"
+  approvedAt        DateTime?
+  approvedById      String?
+  approvedBy        User?    @relation("ApprovedLandListings", fields: [approvedById], references: [id], onDelete: SetNull)
+  rejectionReason   String?
+
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
   questions           Question[]
   messages            Message[]
+  photos              ListingPhoto[]
 
   @@index([location])
   @@index([availableMW])
+  @@index([approvalStatus])
 }
 
 model Question {
@@ -155,4 +180,45 @@ model Message {
 
   @@index([recipientId, read])
   @@index([senderId])
+}
+
+// Mutual NDA + Non-Circumvention signature record. Captured per-user, per-version.
+// Provides the audit trail required to enforce the non-circumvention clause.
+model MndaSignature {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName     String   // Typed legal name (e-signature)
+  company      String   // Counterparty entity
+  title        String?
+  ipAddress    String?
+  userAgent    String?
+  mndaVersion  String   // e.g. "v1" — bump when MNDA text changes
+  signedAt     DateTime @default(now())
+
+  @@index([userId, mndaVersion])
+  @@index([signedAt])
+}
+
+// Polymorphic photo / document record. Links to either a DC listing or a Land listing.
+// Stored in Cloudflare R2; r2Key is the bucket key.
+model ListingPhoto {
+  id            String   @id @default(cuid())
+  r2Key         String   // path inside the R2 bucket, e.g. "land/{listingId}/{cuid}.jpg"
+  originalName  String
+  contentType   String
+  sizeBytes     Int
+  kind          String   @default("photo") // "photo" | "document" | "drone" | "diagram"
+  caption       String?
+  sortOrder     Int      @default(0)
+
+  dcListingId   String?
+  dcListing     DataCenterListing?  @relation(fields: [dcListingId], references: [id], onDelete: Cascade)
+  landListingId String?
+  landListing   PoweredLandListing? @relation(fields: [landListingId], references: [id], onDelete: Cascade)
+
+  uploadedAt    DateTime @default(now())
+
+  @@index([dcListingId])
+  @@index([landListingId])
 }

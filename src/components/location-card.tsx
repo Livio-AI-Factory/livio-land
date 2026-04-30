@@ -1,3 +1,5 @@
+import { ListingMap } from "./listing-map";
+
 export function LocationCard({
   location,
   country,
@@ -51,7 +53,18 @@ export function LocationCard({
           Open in Google Maps →
         </a>
       </div>
-      <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+      <ListingMap
+        latitude={latitude}
+        longitude={longitude}
+        streetAddress={isOwnerOrAdmin ? streetAddress : null}
+        county={county}
+        state={state}
+        postalCode={postalCode}
+        location={location}
+        country={country}
+        className="mt-4"
+      />
+      <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
         <Stat label="City / Region" value={location} />
         <Stat label="State" value={state || "—"} />
         <Stat label="County" value={county || "—"} />

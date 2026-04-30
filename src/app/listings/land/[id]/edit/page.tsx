@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { updateLandListing } from "@/lib/listing-actions";
 import { ListingForm, FormField, FormSection } from "@/components/listing-form";
+import { PhotoUpload } from "@/components/photo-upload";
+import { getListingPhotos } from "@/lib/photo-actions";
 
 export default async function EditLandListingPage({
   params,
@@ -35,6 +37,7 @@ export default async function EditLandListingPage({
   const update = updateLandListing.bind(null, listing.id);
   const isoDate = (d: Date | null | undefined) =>
     d ? new Date(d).toISOString().slice(0, 10) : "";
+  const photos = await getListingPhotos("land", listing.id);
 
   return (
     <div className="mx-auto max-w-3xl py-10 px-4">
@@ -240,6 +243,17 @@ export default async function EditLandListingPage({
             </div>
           </FormSection>
         </ListingForm>
+      </div>
+
+      <div className="mt-10 rounded-lg border border-slate-200 bg-white p-6">
+        <h2 className="text-lg font-semibold text-slate-900">Site photos &amp; documents</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Upload photos of the parcel, drone footage stills, topo surveys, water-rights
+          documentation, or your utility LOI. Off-takers see these on the listing once approved.
+        </p>
+        <div className="mt-4">
+          <PhotoUpload type="land" listingId={listing.id} photos={photos} canEdit={true} />
+        </div>
       </div>
     </div>
   );

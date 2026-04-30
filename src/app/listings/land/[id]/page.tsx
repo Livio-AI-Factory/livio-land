@@ -6,6 +6,8 @@ import { QAndA } from "@/components/q-and-a";
 import { OwnerActions } from "@/components/owner-actions";
 import { MessageForm } from "@/components/message-form";
 import { LocationCard } from "@/components/location-card";
+import { PhotoUpload } from "@/components/photo-upload";
+import { getListingPhotos } from "@/lib/photo-actions";
 
 export default async function LandListingDetailPage({
   params,
@@ -32,6 +34,7 @@ export default async function LandListingDetailPage({
   if (!listing) notFound();
   const user = await getCurrentUser();
   const isOwner = user?.id === listing.ownerId;
+  const photos = await getListingPhotos("land", listing.id);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -90,6 +93,14 @@ export default async function LandListingDetailPage({
           longitude={listing.longitude}
           isOwnerOrAdmin={isOwner || !!user?.isAdmin}
         />
+        {(photos.length > 0 || isOwner) && (
+          <div className="mt-6 border-t border-slate-200 pt-6">
+            <h2 className="font-semibold text-slate-900">Site photos &amp; documents</h2>
+            <div className="mt-3">
+              <PhotoUpload type="land" listingId={listing.id} photos={photos} canEdit={isOwner || !!user?.isAdmin} />
+            </div>
+          </div>
+        )}
         {listing.description && (
           <div className="mt-6 border-t border-slate-200 pt-6">
             <h2 className="font-semibold text-slate-900">About</h2>

@@ -22,7 +22,11 @@ interface Props {
 
 export default async function LandListingsPage({ searchParams }: Props) {
   const f = searchParams;
-  const where: Prisma.PoweredLandListingWhereInput = { status: "available" };
+  // Only approved listings show up in public browse.
+  const where: Prisma.PoweredLandListingWhereInput = {
+    status: "available",
+    approvalStatus: "approved",
+  };
   if (f.q) {
     where.OR = [
       { title: { contains: f.q } },
