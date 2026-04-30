@@ -187,13 +187,17 @@ export async function deleteLandListing(id: string) {
 // so this action mainly (a) bumps updatedAt so admins see freshly-submitted
 // listings at the top of the queue and (b) drops the user on a confirmation
 // page so they know it's been submitted. Already-approved listings are no-ops.
-export async function postDcListing(id: string) {
+//
+// These are wired into <form action={...}> on the detail pages, so the return
+// type must be void | Promise<void> — we throw on permission errors instead
+// of returning { error }.
+export async function postDcListing(id: string): Promise<void> {
   const user = await getCurrentUser();
   if (!user) redirect("/auth/signin");
   const listing = await prisma.dataCenterListing.findUnique({ where: { id } });
-  if (!listing) return { error: "Not found" };
+  if (!listing) throw new Error("Listing not found");
   if (listing.ownerId !== user.id && !user.isAdmin) {
-    return { error: "Not allowed" };
+    throw new Error("Only the listing owner or an admin can post this listing.");
   }
   if (listing.approvalStatus === "pending") {
     await prisma.dataCenterListing.update({
@@ -205,13 +209,13 @@ export async function postDcListing(id: string) {
   redirect(`/listings/dc/${id}?posted=1`);
 }
 
-export async function postLandListing(id: string) {
+export async function postLandListing(id: string): Promise<void> {
   const user = await getCurrentUser();
   if (!user) redirect("/auth/signin");
   const listing = await prisma.poweredLandListing.findUnique({ where: { id } });
-  if (!listing) return { error: "Not found" };
+  if (!listing) throw new Error("Listing not found");
   if (listing.ownerId !== user.id && !user.isAdmin) {
-    return { error: "Not allowed" };
+    throw new Error("Only the listing owner or an admin can post this listing.");
   }
   if (listing.approvalStatus === "pending") {
     await prisma.poweredLandListing.update({
