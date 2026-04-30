@@ -21,7 +21,7 @@ export default async function SigninPage({ searchParams }: Props) {
       <h1 className="text-3xl font-bold text-slate-900">Welcome back</h1>
       <p className="mt-2 text-slate-600">Sign in to manage your listings.</p>
       <div className="mt-8">
-        <SigninForm action={signin} />
+        <SigninForm action={signin} nextUrl={next} />
       </div>
       <p className="mt-6 text-sm text-slate-600">
         New here?{" "}

@@ -125,7 +125,10 @@ export async function signin(formData: FormData) {
   session.name = user.name;
   await session.save();
 
-  redirect("/dashboard");
+  // Honor ?next= so the user lands back on the page they were trying to reach
+  // (e.g. /listings/dc → MNDA gate → signin → back to /listings/dc).
+  const next = (formData.get("next") as string | null)?.trim();
+  redirect(next && next.startsWith("/") ? next : "/dashboard");
 }
 
 export async function signout() {

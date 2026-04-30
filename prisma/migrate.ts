@@ -69,15 +69,40 @@ async function main() {
   //    have approvalStatus="pending" (the schema default). Auto-approve those
   //    so the public site still shows them. NEW listings created after this
   //    deploy will go in as pending and require admin review.
+  // The placeholder title used by /listings/new/{dc,land} when pre-creating
+  // a draft listing. Drafts with this title were never finished by the user,
+  // so they MUST NOT be auto-approved (otherwise they'd surface in browse
+  // with title="(Draft listing — replace this title)" and 0 MW).
+  const DRAFT_TITLE = "(Draft listing — replace this title)";
+
+  // Backfill: revert any draft-placeholder listings that an earlier deploy
+  // accidentally auto-approved, so they don't keep showing in browse with 0 MW.
+  const cleanupDc = await prisma.dataCenterListing.updateMany({
+    where: { approvalStatus: "approved", title: DRAFT_TITLE },
+    data: { approvalStatus: "pending", approvedAt: null },
+  });
+  const cleanupLand = await prisma.poweredLandListing.updateMany({
+    where: { approvalStatus: "approved", title: DRAFT_TITLE },
+    data: { approvalStatus: "pending", approvedAt: null },
+  });
+  if (cleanupDc.count + cleanupLand.count > 0) {
+    console.log(
+      `  ✓ Demoted ${cleanupDc.count + cleanupLand.count} placeholder drafts back to pending`,
+    );
+  }
+
   const dcUnreviewed = await prisma.dataCenterListing.findMany({
     where: { approvalStatus: "pending", approvedAt: null },
-    select: { id: true, createdAt: true },
+    select: { id: true, createdAt: true, title: true, availableMW: true },
   });
   if (dcUnreviewed.length > 0) {
-    // Only auto-approve listings older than 1 hour (older than this migration run).
+    // Only auto-approve listings that are (a) older than 1 hour,
+    // (b) not the placeholder draft title, and (c) have non-zero capacity.
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     const idsToApprove = dcUnreviewed
       .filter((l) => l.createdAt < oneHourAgo)
+      .filter((l) => l.title !== DRAFT_TITLE)
+      .filter((l) => l.availableMW > 0)
       .map((l) => l.id);
     if (idsToApprove.length > 0) {
       const r = await prisma.dataCenterListing.updateMany({
@@ -90,12 +115,14 @@ async function main() {
 
   const landUnreviewed = await prisma.poweredLandListing.findMany({
     where: { approvalStatus: "pending", approvedAt: null },
-    select: { id: true, createdAt: true },
+    select: { id: true, createdAt: true, title: true, availableMW: true },
   });
   if (landUnreviewed.length > 0) {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     const idsToApprove = landUnreviewed
       .filter((l) => l.createdAt < oneHourAgo)
+      .filter((l) => l.title !== DRAFT_TITLE)
+      .filter((l) => l.availableMW > 0)
       .map((l) => l.id);
     if (idsToApprove.length > 0) {
       const r = await prisma.poweredLandListing.updateMany({

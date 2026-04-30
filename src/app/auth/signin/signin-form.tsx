@@ -4,8 +4,10 @@ import { useState } from "react";
 
 export function SigninForm({
   action,
+  nextUrl,
 }: {
   action: (formData: FormData) => Promise<{ error?: string } | void>;
+  nextUrl?: string;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -24,6 +26,7 @@ export function SigninForm({
       }}
       className="space-y-4"
     >
+      {nextUrl && <input type="hidden" name="next" value={nextUrl} />}
       <div>
         <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
         <input

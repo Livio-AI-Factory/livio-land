@@ -80,8 +80,15 @@ export async function hasSignedCurrentMnda(): Promise<boolean> {
   return dbUser.mndaSignedVersion === MNDA_VERSION;
 }
 
-/** Helper: route guard. Call from server components/pages that should be gated. */
-export async function requireSignedMnda(redirectTo: string = "/mnda") {
+/** Helper: route guard. Call from server components/pages that should be gated.
+ * Preserves the user's intended destination by reading x-pathname (set by the
+ * middleware) and passing it to /mnda?next=… so they land back on the page
+ * they were trying to reach instead of the homepage after signing.
+ */
+export async function requireSignedMnda() {
   const signed = await hasSignedCurrentMnda();
-  if (!signed) redirect(redirectTo);
+  if (signed) return;
+  const headerBag = await headers();
+  const path = headerBag.get("x-pathname") || "/";
+  redirect(`/mnda?next=${encodeURIComponent(path)}`);
 }
