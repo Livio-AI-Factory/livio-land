@@ -23,68 +23,34 @@ export default async function AdminPage() {
     );
   }
 
-  // Pull pending listings (both kinds) plus a small stats summary.
-  const [pendingDc, pendingLand, dcCounts, landCounts, mndaSignatures] = await Promise.all([
-    prisma.dataCenterListing.findMany({
-      where: { approvalStatus: "pending" },
-      orderBy: { createdAt: "desc" },
-      include: { owner: { select: { name: true, email: true, company: true } } },
-    }),
+  // Land-only marketplace — DC pending queue retired.
+  const [pendingLand, landCounts, mndaSignatures] = await Promise.all([
     prisma.poweredLandListing.findMany({
       where: { approvalStatus: "pending" },
       orderBy: { createdAt: "desc" },
       include: { owner: { select: { name: true, email: true, company: true } } },
     }),
-    prisma.dataCenterListing.groupBy({ by: ["approvalStatus"], _count: true }),
     prisma.poweredLandListing.groupBy({ by: ["approvalStatus"], _count: true }),
     prisma.mndaSignature.count(),
   ]);
 
   const sumByStatus = (rows: { approvalStatus: string; _count: number }[]) =>
     rows.reduce<Record<string, number>>((acc, r) => ({ ...acc, [r.approvalStatus]: r._count }), {});
-  const dc = sumByStatus(dcCounts);
   const land = sumByStatus(landCounts);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
       <h1 className="text-3xl font-bold text-slate-900">Admin</h1>
       <p className="mt-1 text-sm text-slate-500">
-        Approve or reject new listings. Approved listings become visible to off-takers.
+        Approve or reject new land listings. Approved listings become visible to off-takers.
       </p>
 
       <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Stat label="Pending review" value={(dc.pending || 0) + (land.pending || 0)} accent="amber" />
-        <Stat label="Approved listings" value={(dc.approved || 0) + (land.approved || 0)} accent="emerald" />
-        <Stat label="Rejected" value={(dc.rejected || 0) + (land.rejected || 0)} accent="slate" />
+        <Stat label="Pending review" value={land.pending || 0} accent="amber" />
+        <Stat label="Approved listings" value={land.approved || 0} accent="emerald" />
+        <Stat label="Rejected" value={land.rejected || 0} accent="slate" />
         <Stat label="MNDAs on file" value={mndaSignatures} accent="brand" />
       </div>
-
-      <section className="mt-10">
-        <h2 className="text-lg font-semibold text-slate-900">
-          Pending DC capacity ({pendingDc.length})
-        </h2>
-        {pendingDc.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-500">Nothing to review here.</p>
-        ) : (
-          <div className="mt-3 space-y-3">
-            {pendingDc.map((l) => (
-              <AdminListingRow
-                key={l.id}
-                type="dc"
-                id={l.id}
-                title={l.title}
-                location={l.location}
-                ownerName={l.owner.name}
-                ownerEmail={l.owner.email}
-                ownerCompany={l.owner.company || ""}
-                createdAt={l.createdAt.toISOString()}
-                summary={`${l.availableMW} MW available · ${l.tier ?? "—"} · ${l.coolingType ?? "—"} cooling`}
-                description={l.description || ""}
-              />
-            ))}
-          </div>
-        )}
-      </section>
 
       <section className="mt-10">
         <h2 className="text-lg font-semibold text-slate-900">

@@ -10,46 +10,33 @@ export default async function DashboardPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/auth/signin");
 
-  const [dcListings, landListings, questionsAsked, pendingDc, pendingLand] =
-    await Promise.all([
-      prisma.dataCenterListing.findMany({
-        where: { ownerId: user.id },
-        orderBy: { createdAt: "desc" },
-        include: { _count: { select: { questions: true } } },
-      }),
-      prisma.poweredLandListing.findMany({
-        where: { ownerId: user.id },
-        orderBy: { createdAt: "desc" },
-        include: { _count: { select: { questions: true } } },
-      }),
-      prisma.question.findMany({
-        where: { askerId: user.id },
-        orderBy: { createdAt: "desc" },
-        take: 10,
-        include: {
-          dcListing: { select: { id: true, title: true } },
-          landListing: { select: { id: true, title: true } },
-          answers: { take: 1 },
-        },
-      }),
-      // Admin-only data — only fetched if isAdmin, otherwise empty arrays
-      // so the homepage of non-admins doesn't pay the cost.
-      user.isAdmin
-        ? prisma.dataCenterListing.findMany({
-            where: { approvalStatus: "pending" },
-            orderBy: { createdAt: "desc" },
-            include: { owner: { select: { name: true, email: true, company: true } } },
-          })
-        : Promise.resolve([] as Array<never>),
-      user.isAdmin
-        ? prisma.poweredLandListing.findMany({
-            where: { approvalStatus: "pending" },
-            orderBy: { createdAt: "desc" },
-            include: { owner: { select: { name: true, email: true, company: true } } },
-          })
-        : Promise.resolve([] as Array<never>),
-    ]);
-  const totalPending = pendingDc.length + pendingLand.length;
+  // Land-only marketplace: dropped the DC findMany queries entirely.
+  const [landListings, questionsAsked, pendingLand] = await Promise.all([
+    prisma.poweredLandListing.findMany({
+      where: { ownerId: user.id },
+      orderBy: { createdAt: "desc" },
+      include: { _count: { select: { questions: true } } },
+    }),
+    prisma.question.findMany({
+      where: { askerId: user.id },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+      include: {
+        landListing: { select: { id: true, title: true } },
+        answers: { take: 1 },
+      },
+    }),
+    // Admin-only data — only fetched if isAdmin, otherwise empty arrays
+    // so the dashboard of non-admins doesn't pay the cost.
+    user.isAdmin
+      ? prisma.poweredLandListing.findMany({
+          where: { approvalStatus: "pending" },
+          orderBy: { createdAt: "desc" },
+          include: { owner: { select: { name: true, email: true, company: true } } },
+        })
+      : Promise.resolve([] as Array<never>),
+  ]);
+  const totalPending = pendingLand.length;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
@@ -63,10 +50,10 @@ export default async function DashboardPage() {
           </p>
         </div>
         <Link
-          href="/listings/new"
-          className="rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
+          href="/listings/new/land"
+          className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
         >
-          + New listing
+          + List land
         </Link>
       </div>
 
@@ -102,21 +89,6 @@ export default async function DashboardPage() {
             </p>
           ) : (
             <div className="mt-4 space-y-3">
-              {pendingDc.map((l) => (
-                <AdminListingRow
-                  key={l.id}
-                  type="dc"
-                  id={l.id}
-                  title={l.title}
-                  location={l.location}
-                  ownerName={l.owner.name}
-                  ownerEmail={l.owner.email}
-                  ownerCompany={l.owner.company || ""}
-                  createdAt={l.createdAt.toISOString()}
-                  summary={`${l.availableMW} MW available · ${l.tier ?? "—"} · ${l.coolingType ?? "—"} cooling`}
-                  description={l.description || ""}
-                />
-              ))}
               {pendingLand.map((l) => (
                 <AdminListingRow
                   key={l.id}
@@ -137,55 +109,17 @@ export default async function DashboardPage() {
         </section>
       )}
 
-      <section className="mt-10">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-slate-900">
-            DC Capacity Listings ({dcListings.length})
-          </h2>
-          <Link
-            href="/listings/new/dc"
-            className="text-sm font-medium text-brand-600 hover:underline"
-          >
-            + Add DC listing
-          </Link>
-        </div>
-        <div className="mt-4 grid gap-3">
-          {dcListings.length === 0 && (
-            <p className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
-              No DC capacity listed yet.
-            </p>
-          )}
-          {dcListings.map((l) => (
-            <Link
-              key={l.id}
-              href={`/listings/dc/${l.id}`}
-              className="rounded-xl border border-slate-200 bg-white p-4 hover:border-brand-500"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium text-slate-900">{l.title}</div>
-                  <div className="text-sm text-slate-600">
-                    {l.location} • {l.availableMW} MW available
-                  </div>
-                </div>
-                <div className="text-sm text-slate-500">
-                  {l._count.questions}{" "}
-                  {l._count.questions === 1 ? "question" : "questions"}
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
+      {/* DC Capacity section retired — Livio Land is land-only. Old DC
+          listings still exist in the schema but are hidden from the UI. */}
 
       <section className="mt-10">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold text-slate-900">
-            Powered Land Listings ({landListings.length})
+            Your land listings ({landListings.length})
           </h2>
           <Link
             href="/listings/new/land"
-            className="text-sm font-medium text-brand-600 hover:underline"
+            className="text-sm font-medium text-emerald-700 hover:underline"
           >
             + Add land listing
           </Link>
@@ -226,10 +160,11 @@ export default async function DashboardPage() {
           </h2>
           <div className="mt-4 grid gap-3">
             {questionsAsked.map((q) => {
-              const target = q.dcListing || q.landListing;
-              const path = q.dcListingId
-                ? `/listings/dc/${q.dcListingId}`
-                : `/listings/land/${q.landListingId}`;
+              // Land-only marketplace: any DC questions in old data are
+              // ignored from this dashboard view.
+              const target = q.landListing;
+              if (!target) return null;
+              const path = `/listings/land/${q.landListingId}`;
               return (
                 <Link
                   key={q.id}

@@ -75,44 +75,31 @@ async function main() {
   // with title="(Draft listing — replace this title)" and 0 MW).
   const DRAFT_TITLE = "(Draft listing — replace this title)";
 
-  // Backfill: revert any draft-placeholder listings that an earlier deploy
-  // accidentally auto-approved, so they don't keep showing in browse with 0 MW.
-  const cleanupDc = await prisma.dataCenterListing.updateMany({
-    where: { approvalStatus: "approved", title: DRAFT_TITLE },
-    data: { approvalStatus: "pending", approvedAt: null },
-  });
+  // Land-only pivot — Livio Land has retired DC capacity listings entirely.
+  // Delete every DC listing so the DB matches what the UI now shows. Cascade
+  // handles related Q&A, photos, messages. Idempotent — runs every deploy
+  // but does no work once the table is empty.
+  const dcWipe = await prisma.dataCenterListing.deleteMany({});
+  if (dcWipe.count > 0) {
+    console.log(`  ✓ Deleted ${dcWipe.count} retired DC listings`);
+  }
+
+  // Backfill: revert any draft-placeholder land listings that an earlier
+  // deploy accidentally auto-approved, so they don't keep showing in browse
+  // with 0 MW.
   const cleanupLand = await prisma.poweredLandListing.updateMany({
     where: { approvalStatus: "approved", title: DRAFT_TITLE },
     data: { approvalStatus: "pending", approvedAt: null },
   });
-  if (cleanupDc.count + cleanupLand.count > 0) {
+  if (cleanupLand.count > 0) {
     console.log(
-      `  ✓ Demoted ${cleanupDc.count + cleanupLand.count} placeholder drafts back to pending`,
+      `  ✓ Demoted ${cleanupLand.count} placeholder land drafts back to pending`,
     );
   }
 
-  const dcUnreviewed = await prisma.dataCenterListing.findMany({
-    where: { approvalStatus: "pending", approvedAt: null },
-    select: { id: true, createdAt: true, title: true, availableMW: true },
-  });
-  if (dcUnreviewed.length > 0) {
-    // Only auto-approve listings that are (a) older than 1 hour,
-    // (b) not the placeholder draft title, and (c) have non-zero capacity.
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    const idsToApprove = dcUnreviewed
-      .filter((l) => l.createdAt < oneHourAgo)
-      .filter((l) => l.title !== DRAFT_TITLE)
-      .filter((l) => l.availableMW > 0)
-      .map((l) => l.id);
-    if (idsToApprove.length > 0) {
-      const r = await prisma.dataCenterListing.updateMany({
-        where: { id: { in: idsToApprove } },
-        data: { approvalStatus: "approved", approvedAt: new Date() },
-      });
-      console.log(`  ✓ Auto-approved ${r.count} pre-existing DC listings`);
-    }
-  }
-
+  // Auto-approve any pre-existing land listings (older than 1 hour, with
+  // non-placeholder data) so the public site doesn't suddenly hide real
+  // listings after the approvalStatus column was added.
   const landUnreviewed = await prisma.poweredLandListing.findMany({
     where: { approvalStatus: "pending", approvedAt: null },
     select: { id: true, createdAt: true, title: true, availableMW: true },
@@ -180,16 +167,11 @@ async function main() {
   });
   if (demoUsers.length > 0) {
     const ownerIds = demoUsers.map((u) => u.id);
-    const deletedDc = await prisma.dataCenterListing.deleteMany({
-      where: { ownerId: { in: ownerIds } },
-    });
     const deletedLand = await prisma.poweredLandListing.deleteMany({
       where: { ownerId: { in: ownerIds } },
     });
-    if (deletedDc.count + deletedLand.count > 0) {
-      console.log(
-        `  ✓ Removed ${deletedDc.count} demo DC listings + ${deletedLand.count} demo land listings`,
-      );
+    if (deletedLand.count > 0) {
+      console.log(`  ✓ Removed ${deletedLand.count} demo land listings`);
     }
   }
 

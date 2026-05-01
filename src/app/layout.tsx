@@ -7,12 +7,12 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swa
 import { getCurrentUser } from "@/lib/session";
 import { signout } from "@/lib/auth-actions";
 import { prisma } from "@/lib/db";
-import { getProfilePhotoUrl } from "@/lib/r2-helpers";
+import { getProfilePhotoUrl } from "@/lib/profile-actions";
 
 export const metadata: Metadata = {
-  title: "Livio Land — Powered Land & Data Center Capacity Marketplace",
+  title: "Livio Land — The marketplace for powered land",
   description:
-    "Connect off-takers with powered land and data center capacity. List your site, search by MW and location, and ask the questions that matter — water, PPA, interconnection.",
+    "Connect landowners with utility-ready acreage to the data center developers who need it. Skip the brokers. List your land, search by MW, and ask the questions that actually matter — water, PPA, interconnection.",
 };
 
 export default async function RootLayout({
@@ -40,9 +40,7 @@ export default async function RootLayout({
               <span className="text-lg font-bold text-slate-900">Livio Land</span>
             </Link>
             <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-700">
-              <Link href="/listings/dc" className="hover:text-brand-600">
-                DC Capacity
-              </Link>
+              {/* DC Capacity nav link retired — Livio Land is land-only. */}
               <Link href="/listings/land" className="hover:text-brand-600">
                 Powered Land
               </Link>
@@ -65,10 +63,10 @@ export default async function RootLayout({
                     Dashboard
                   </Link>
                   <Link
-                    href="/listings/new"
-                    className="rounded-md bg-brand-600 px-3 py-1.5 text-white hover:bg-brand-700"
+                    href="/listings/new/land"
+                    className="rounded-md bg-emerald-600 px-3 py-1.5 text-white hover:bg-emerald-700"
                   >
-                    + List a site
+                    + List land
                   </Link>
                   <Link
                     href="/profile"
@@ -115,9 +113,19 @@ export default async function RootLayout({
         </header>
         <main className="min-h-[calc(100vh-4rem)]">{children}</main>
         <footer className="border-t border-slate-200 bg-white">
-          <div className="mx-auto max-w-7xl px-4 py-6 text-sm text-slate-500 flex flex-wrap justify-between gap-2">
-            <span>© {new Date().getFullYear()} Livio Land</span>
-            <span>Connecting off-takers with powered land & DC capacity</span>
+          <div className="mx-auto max-w-7xl px-4 py-6 text-xs text-slate-500 space-y-2">
+            <div className="flex flex-wrap justify-between gap-2">
+              <span>© {new Date().getFullYear()} Livio Land</span>
+              <span>The marketplace for powered land</span>
+            </div>
+            {/* Public-facing fee + non-circumvention notice — applies to every
+                visitor of every page so there's no question of notice. */}
+            <div className="text-[11px] leading-relaxed text-slate-500 border-t border-slate-100 pt-2">
+              Any purchase, lease, or joint-venture sourced through Livio Land is subject to a 2% buyer-side
+              and 2% seller-side success fee, payable to Livio Building Systems Inc. at close. Bypassing the
+              platform on a transaction first introduced through Livio Land — directly or via affiliates —
+              triggers liquidated damages of 8% of total deal value plus reasonable legal fees.
+            </div>
           </div>
         </footer>
       </body>
