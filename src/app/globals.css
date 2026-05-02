@@ -33,10 +33,11 @@ button, a, input, select, textarea {
     color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
 }
 
-/* Subtle hero gradient utility */
+/* Subtle emerald hero gradient — matches the brand color palette so the
+   hero ramps in the same family as the helmet + "Land" logo and CTAs. */
 .bg-hero-gradient {
-  background: radial-gradient(ellipse 80% 60% at 30% 20%, #e0f2fe 0%, transparent 60%),
-    radial-gradient(ellipse 70% 60% at 90% 10%, #d1fae5 0%, transparent 50%),
+  background: radial-gradient(ellipse 80% 60% at 30% 20%, #ecfdf5 0%, transparent 60%),
+    radial-gradient(ellipse 70% 60% at 90% 10%, #a7f3d0 0%, transparent 50%),
     linear-gradient(180deg, #f8fafc 0%, white 100%);
 }
 
