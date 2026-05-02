@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { AdminListingRow } from "./listing-row";
+import { SeedDemoButton } from "@/components/seed-demo-button";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +51,10 @@ export default async function AdminPage() {
         <Stat label="Approved listings" value={land.approved || 0} accent="emerald" />
         <Stat label="Rejected" value={land.rejected || 0} accent="slate" />
         <Stat label="MNDAs on file" value={mndaSignatures} accent="brand" />
+      </div>
+
+      <div className="mt-6">
+        <SeedDemoButton />
       </div>
 
       <section className="mt-10">
