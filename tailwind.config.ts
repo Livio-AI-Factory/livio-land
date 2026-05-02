@@ -5,14 +5,17 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Brand color = emerald, matching grid.golivio.com and the Livio Land
+        // helmet+Land logo. Every bg-brand-* / text-brand-* / border-brand-*
+        // resolves to a consistent emerald shade across the platform.
         brand: {
-          50: "#f0f9ff",
-          100: "#e0f2fe",
-          200: "#bae6fd",
-          500: "#0ea5e9",
-          600: "#0284c7",
-          700: "#0369a1",
-          900: "#0c4a6e",
+          50: "#ecfdf5",
+          100: "#d1fae5",
+          200: "#a7f3d0",
+          500: "#10b981",
+          600: "#059669",
+          700: "#047857",
+          900: "#064e3b",
         },
       },
     },
