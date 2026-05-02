@@ -88,7 +88,7 @@ export default async function DashboardPage() {
             className="group rounded-2xl border-2 border-brand-200 bg-brand-50 p-6 hover:border-brand-400 transition"
           >
             <div className="text-xs font-semibold uppercase tracking-wide text-brand-700">
-              Sourcing for an AI data center
+              Sourcing for an AI Data Center
             </div>
             <div className="mt-2 text-xl font-bold text-slate-900 group-hover:text-brand-700">
               Browse powered land →

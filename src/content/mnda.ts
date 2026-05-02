@@ -20,7 +20,7 @@ export const MNDA_TITLE =
 
 export const MNDA_INTRO = `This Agreement is entered into between Livio Building Systems, Inc., 171 Main Street #562, Los Altos, CA 94022 ("Livio"), and you on behalf of your organization (together, the "Parties").
 
-The Parties want to use the Livio Land marketplace to find a counterparty for the sale, lease, or joint-venture development of utility-ready land for data center use (the "Purpose"). To do that, the Parties may need to share sensitive information and will rely on Livio to make introductions. This Agreement sets out the ground rules for keeping that information confidential, paying Livio a fair fee when a deal closes, and dealing with each other fairly afterwards.`;
+The Parties want to use Livio Land to find a counterparty for the sale, lease, or joint-venture development of utility-ready land for AI Data Center use (the "Purpose"). To do that, the Parties may need to share sensitive information and will rely on Livio to make introductions. This Agreement sets out the ground rules for keeping that information confidential, paying Livio a fair fee when a deal closes, and dealing with each other fairly afterwards.`;
 
 export const MNDA_SECTIONS: { heading: string; body: string }[] = [
   {
@@ -63,7 +63,7 @@ Sharing with authorized representatives (employees, advisors, and affiliates who
     heading: "8. Fee Structure (2% Buyer + 2% Seller)",
     body: `In exchange for using Livio Land to source counterparties, the Parties agree that for any Transaction (defined below) sourced through the platform, Livio will be paid a success fee equal to:
 
-  • 2.0% of the total Transaction value, paid by the Buyer-side party (the data center developer, off-taker, or acquirer); and
+  • 2.0% of the total Transaction value, paid by the Buyer-side party (the AI Data Center developer, off-taker, or acquirer); and
   • 2.0% of the total Transaction value, paid by the Seller-side party (the landowner or lessor).
 
 The fee is earned and payable upon Closing.

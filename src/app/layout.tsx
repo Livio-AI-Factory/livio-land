@@ -10,9 +10,9 @@ import { prisma } from "@/lib/db";
 import { getProfilePhotoUrl } from "@/lib/r2-helpers";
 
 export const metadata: Metadata = {
-  title: "Livio Land — Powered land for AI data centers",
+  title: "Livio Land — Powered land for AI Data Centers",
   description:
-    "The sourcing engine that puts utility-ready powered land in front of AI data center developers, hyperscalers, and AI labs. Vetted parcels with MW, PPA status, and interconnection stage on file — MNDA-protected, ready to underwrite.",
+    "The sourcing engine that puts utility-ready powered land in front of AI Data Center developers, hyperscalers, and AI labs. Vetted parcels with MW, PPA status, and interconnection stage on file — MNDA-protected, ready to underwrite.",
 };
 
 export default async function RootLayout({
@@ -33,15 +33,11 @@ export default async function RootLayout({
       <body>
         <header className="border-b border-slate-200 bg-white">
           <div className="mx-auto max-w-7xl px-4 py-4 flex items-center justify-between">
-            {/* LIVIO Land wordmark — LIVIO in black, helmet icon, "Land" in
-                green to match the grid.golivio.com brand. The helmet is a
-                construction-worker hard-hat (Livio Building Systems' visual
-                anchor across all products: Grid, Land, etc.). */}
-            <Link href="/" className="flex items-center gap-1.5">
-              <span className="text-2xl font-extrabold tracking-tight text-slate-900">
-                LIVIO
-              </span>
-              <span aria-hidden className="text-2xl leading-none">⛑️</span>
+            {/* Livio Land wordmark — helmet icon (the Livio Building Systems
+                visual anchor across all products: Grid, Land, etc.) followed
+                by "Land" in emerald. */}
+            <Link href="/" className="flex items-center gap-2">
+              <span aria-hidden className="text-3xl leading-none">⛑️</span>
               <span className="text-2xl font-extrabold tracking-tight text-emerald-600">
                 Land
               </span>
@@ -123,7 +119,7 @@ export default async function RootLayout({
           <div className="mx-auto max-w-7xl px-4 py-6 text-xs text-slate-500 space-y-2">
             <div className="flex flex-wrap justify-between gap-2">
               <span>© {new Date().getFullYear()} Livio Building Systems, Inc.</span>
-              <span>Sourcing powered land for AI data centers.</span>
+              <span>Sourcing powered land for AI Data Centers.</span>
             </div>
             {/* Public-facing fee + non-circumvention notice — applies to every
                 visitor of every page so there's no question of notice. */}

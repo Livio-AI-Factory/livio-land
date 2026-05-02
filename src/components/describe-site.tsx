@@ -59,7 +59,7 @@ export function DescribeSite({
           </h2>
           <p className="mt-1 text-sm text-slate-600">
             Paste a paragraph or two — utility, MW, acres, PPA status, location, anything
-            you'd tell an AI data center developer on a call. Click <strong>Auto-fill</strong> and we'll
+            you'd tell an AI Data Center developer on a call. Click <strong>Auto-fill</strong> and we'll
             populate the questionnaire below. You can review and edit before saving.
           </p>
         </div>

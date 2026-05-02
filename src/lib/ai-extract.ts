@@ -35,7 +35,7 @@ export type ExtractedListing = {
   uncertainFields?: string[];
 };
 
-const SYSTEM_PROMPT = `You extract structured information about powered-land sites for AI data center development from a supplier's free-text description. Return ONE JSON object matching the ExtractedListing schema. Do not invent values — only fill in fields the description clearly states or strongly implies.
+const SYSTEM_PROMPT = `You extract structured information about powered-land sites for AI Data Center development from a supplier's free-text description. Return ONE JSON object matching the ExtractedListing schema. Do not invent values — only fill in fields the description clearly states or strongly implies.
 
 Schema (all fields optional):
 - title: string (a short headline, ≤ 60 chars, like "200-acre powered site, Maricopa County, 75 MW")
