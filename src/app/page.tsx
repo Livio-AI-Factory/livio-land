@@ -20,7 +20,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-4 py-20">
           <div className="max-w-3xl">
             <span className="inline-block rounded-full bg-white border border-slate-200 px-3 py-1 text-xs font-medium text-slate-700">
-              For AI DC developers · hyperscalers · AI labs · investors
+              For AI Data Center developers · hyperscalers · AI labs · investors
             </span>
             <h1 className="mt-4 text-5xl font-bold tracking-tight text-slate-900">
               The fastest way to find your next{" "}
