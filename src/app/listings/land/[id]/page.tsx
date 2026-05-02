@@ -149,7 +149,7 @@ export default async function LandListingDetailPage({
             <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
               <strong className="font-semibold">✓ Live.</strong>{" "}
               {listing.visibility === "public"
-                ? "Your listing is visible to off-takers in the powered-land marketplace."
+                ? "Your listing is visible to AI data center developers actively sourcing land on Livio Land."
                 : "Your listing is private — only emails you invite can view it."}
             </div>
           ) : (
