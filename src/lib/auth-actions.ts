@@ -92,6 +92,16 @@ export async function signup(formData: FormData) {
   session.name = user.name;
   await session.save();
 
+  // Public /list flow handoff: if there's an in-flight listing draft in the
+  // session (set by saveDraftLandListing) materialize it now into a real
+  // PoweredLandListing tied to the user we just created. Skip the regular
+  // ?next= redirect and send them straight to their new listing.
+  const { materializeDraftLandListing } = await import("./draft-listing-actions");
+  const materialized = await materializeDraftLandListing(user.id);
+  if (materialized) {
+    redirect(`/listings/land/${materialized.id}/edit?fresh=1`);
+  }
+
   // Honor the ?next= URL if the user was bounced here from a gated page.
   const next = (formData.get("next") as string | null)?.trim();
   redirect(next && next.startsWith("/") ? next : "/dashboard");
