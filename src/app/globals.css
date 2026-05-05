@@ -2,8 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Swiss / International Typographic Style.
+   Helvetica Neue stack — Mac users render in true Helvetica; everyone
+   else falls back to system sans-serif. Inter is dropped from the body
+   stack as a final fallback only. The intent is geometric neutrality:
+   monofamily across the platform, hierarchy comes from size + weight,
+   never from typeface mixing. */
 :root {
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Helvetica Neue", "Helvetica", "Arial",
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif;
+
+  /* Swiss palette: off-white canvas, near-black text, single-pixel
+     hairline borders. Emerald survives but is demoted to data emphasis
+     and call-to-action only. */
+  --color-bg: #fafafa;
+  --color-text: #0a0a0a;
+  --color-rule: #e5e5e5;
 }
 
 html {
@@ -12,47 +26,35 @@ html {
 
 html,
 body {
-  background-color: #f8fafc;
-  color: #0f172a;
+  background-color: var(--color-bg);
+  color: var(--color-text);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  font-feature-settings: "ss01", "cv11";
-  letter-spacing: -0.005em;
+  letter-spacing: -0.01em;
 }
 
-/* Prose tightening for headings */
-h1, h2, h3 { letter-spacing: -0.02em; }
+/* Headlines tighten further — Swiss display type runs near-zero or
+   slightly negative tracking with very tight leading. */
+h1, h2, h3 {
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  font-weight: 700;
+}
 
-/* Buttons / interactive elements smooth focus */
+/* Color transitions only on interaction. No motion / scale / translate —
+   Swiss treats hover as a state change, not an animation. */
 button, a, input, select, textarea {
   transition: background-color 120ms ease, border-color 120ms ease,
-    color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
-}
-
-/* Subtle emerald hero gradient — matches the brand color palette so the
-   hero ramps in the same family as the helmet + "Land" logo and CTAs. */
-.bg-hero-gradient {
-  background: radial-gradient(ellipse 80% 60% at 30% 20%, #ecfdf5 0%, transparent 60%),
-    radial-gradient(ellipse 70% 60% at 90% 10%, #a7f3d0 0%, transparent 50%),
-    linear-gradient(180deg, #f8fafc 0%, white 100%);
+    color 120ms ease;
 }
 
 /* Avoid layout shift on field hover */
 .no-tap-highlight {
   -webkit-tap-highlight-color: transparent;
-}
-
-/* Card shadow lift utility for hover */
-.card-lift {
-  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
-}
-.card-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 28px -16px rgb(15 23 42 / 0.18);
 }
 
 /* Line clamp helper used in inbox */
@@ -61,4 +63,20 @@ button, a, input, select, textarea {
   display: -webkit-box;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
+}
+
+/* Hairline rule — used as the primary divider across pages. 1px is the
+   Swiss default; we never use shadows for separation. */
+.rule {
+  border-top: 1px solid var(--color-rule);
+}
+
+/* Swiss section eyebrow: monospace-feeling caps label sitting above a
+   headline. Used in place of decorative pills/badges. */
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text);
 }
