@@ -1,5 +1,8 @@
 [build]
-builder = "NIXPACKS"
+# Railway deprecated NIXPACKS — switch to RAILPACK (the new auto-detecting
+# Node.js builder). Builds with the deprecated nixpacks builder were silently
+# failing at `npm i` with no surfaced error log.
+builder = "RAILPACK"
 
 [deploy]
 startCommand = "npx prisma db push --accept-data-loss && (npx tsx prisma/seed.ts || true) && next start -p 3000 -H 0.0.0.0"
