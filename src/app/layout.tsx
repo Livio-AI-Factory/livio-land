@@ -44,9 +44,10 @@ export default async function RootLayout({
           <div className="mx-auto max-w-7xl px-6 lg:px-10 py-5 flex items-center justify-between gap-8">
             {/* The LivioLogo file IS the full lockup (LIVIO + hardhat + LAND
                 in green), shipped as the single source of truth brand image.
-                Untouched, no auxiliary text. */}
+                Untouched, no auxiliary text. Bumped to height=48 per Ethan's
+                ask on May 5 2026 — the smaller 36px lockup felt cramped. */}
             <Link href="/" className="flex items-center leading-none">
-              <LivioLogo height={36} />
+              <LivioLogo height={48} />
             </Link>
 
             <nav className="hidden md:flex items-center gap-7 text-[13px] font-medium text-[var(--color-text)]">
