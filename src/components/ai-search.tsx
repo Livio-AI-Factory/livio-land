@@ -49,15 +49,20 @@ export function AiSearch({
         onSubmit={onSubmit}
         className="flex flex-col gap-2 rounded-xl border border-emerald-200 bg-emerald-50/40 p-3"
       >
-        <label className="text-[11px] uppercase tracking-[0.14em] font-semibold text-emerald-700">
-          AI search
-        </label>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] uppercase tracking-[0.14em] font-semibold text-emerald-700">
+            AI search
+          </span>
+          <span className="text-[11px] text-emerald-800/70">
+            type anything in your own words — AI finds the closest match
+          </span>
+        </div>
         <div className="flex flex-col sm:flex-row gap-2">
           <input
             type="text"
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="e.g. 100 MW in Texas with signed PPA, energized within 12 months"
+            placeholder="e.g. I need 100 MW in Texas with signed PPA, energized within 12 months"
             className="flex-1 rounded-md border border-emerald-200 bg-white px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
           />
           <button
@@ -76,15 +81,21 @@ export function AiSearch({
   return (
     <form onSubmit={onSubmit} className="mx-auto max-w-3xl">
       <div className="flex flex-col gap-3">
-        <label className="text-[11px] uppercase tracking-[0.16em] font-semibold text-emerald-700 text-center">
-          Describe the site you need
-        </label>
+        <div className="text-center">
+          <div className="text-[11px] uppercase tracking-[0.16em] font-semibold text-emerald-700">
+            AI search · type anything
+          </div>
+          <p className="mt-1 text-[13px] text-neutral-600">
+            Describe the site you need in your own words — MW, region, PPA status, timing,
+            anything. AI reads the request and ranks every listing by best match.
+          </p>
+        </div>
         <div className="flex flex-col sm:flex-row gap-2">
           <input
             type="text"
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="100 MW in Texas, signed PPA, energized within 12 months"
+            placeholder="e.g. I need 100 MW in Texas, signed PPA, ready to energize this year"
             className="flex-1 rounded-full border border-emerald-200 bg-white px-5 py-3.5 text-[15px] focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
           />
           <button
@@ -92,11 +103,11 @@ export function AiSearch({
             disabled={submitting || !text.trim()}
             className="rounded-full bg-emerald-700 px-7 py-3.5 text-[14px] font-medium text-white hover:bg-emerald-800 disabled:opacity-50 inline-flex items-center justify-center gap-2"
           >
-            {submitting ? "Searching…" : "Search →"}
+            {submitting ? "Searching…" : "Find my site →"}
           </button>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-2 text-[12px]">
-          <span className="text-neutral-500">Try:</span>
+          <span className="text-neutral-500">Or try:</span>
           {SUGGESTIONS.map((s) => (
             <button
               key={s}
