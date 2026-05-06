@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { prisma } from "@/lib/db";
 
 // Buy-side positioning: Livio Land is an engine that sources utility-ready
 // powered land for AI Data Center developers. Landowners list because they
@@ -16,28 +15,13 @@ import { prisma } from "@/lib/db";
 //   - Single emerald accent reserved for CTAs and emphasized data.
 //   - Hairline 1px rules separate sections — no shadows, no rounded
 //     corners, no soft pastel panels.
-//   - Numbers are foregrounded (Müller-Brockmann school): live MW + listing
-//     count rendered as scale anchors above the fold.
+//   - Below-hero strip foregrounds the buyer-side promise (speed, deliverables)
+//     instead of live counters — counters read "0" until inventory exists,
+//     which undermines the buy-side pitch.
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  // Live counters for the hero — Swiss design celebrates numbers as
-  // visual elements. Wrapped in try/catch so a DB hiccup doesn't 500
-  // the homepage.
-  let listingsCount = 0;
-  let totalMW = 0;
-  try {
-    const live = await prisma.poweredLandListing.findMany({
-      where: { approvalStatus: "approved", visibility: "public" },
-      select: { availableMW: true },
-    });
-    listingsCount = live.length;
-    totalMW = live.reduce((s, r) => s + (r.availableMW || 0), 0);
-  } catch {
-    // ignore — leave counters at zero
-  }
-
   return (
     <div>
       {/* HERO */}
@@ -80,42 +64,54 @@ export default async function HomePage() {
           </div>
         </div>
 
+        {/* Buyer-promise strip — Swiss numerical anchors swapped for short
+            declarative claims. Each cell leads with a kicker (eyebrow), then
+            a tight 1–2 line statement. Three cells across — symmetric,
+            hairline-separated, flush to the bottom rule. The first cell
+            keeps the large numeral treatment ("10 min") so the page still
+            has a Müller-Brockmann scale anchor above the fold. */}
         <div className="border-t border-[var(--color-rule)]">
-          <div className="mx-auto max-w-7xl px-6 lg:px-10 grid grid-cols-12 divide-x divide-[var(--color-rule)]">
-            <div className="col-span-6 md:col-span-3 px-0 md:px-8 py-8">
+          <div className="mx-auto max-w-7xl px-6 lg:px-10 grid grid-cols-12 divide-y md:divide-y-0 md:divide-x divide-[var(--color-rule)]">
+            <div className="col-span-12 md:col-span-4 px-0 md:px-8 py-8">
               <div className="text-[11px] uppercase tracking-[0.14em] font-semibold text-neutral-600">
-                Live listings
+                Time to first match
               </div>
               <div className="mt-2 text-5xl font-bold tracking-tight">
-                {listingsCount}
+                &lt; 10 min
+              </div>
+              <div className="mt-2 text-[13px] leading-[1.55] text-neutral-700">
+                to find your ideal powered land site.
               </div>
             </div>
-            <div className="col-span-6 md:col-span-3 px-6 md:px-8 py-8">
+            <div className="col-span-12 md:col-span-4 px-0 md:px-8 py-8">
               <div className="text-[11px] uppercase tracking-[0.14em] font-semibold text-neutral-600">
-                MW available
+                With every site
               </div>
-              <div className="mt-2 text-5xl font-bold tracking-tight">
-                {totalMW.toLocaleString()}
+              <div className="mt-2 text-3xl md:text-4xl font-bold tracking-tight leading-[1.05]">
+                Feasibility report included.
+              </div>
+              <div className="mt-2 text-[13px] leading-[1.55] text-neutral-700">
+                MW deliverability, PPA status, interconnection stage, water,
+                fiber, zoning — packaged for your IC.
               </div>
             </div>
-            <div className="col-span-12 md:col-span-3 px-6 md:px-8 py-8">
+            <div className="col-span-12 md:col-span-4 px-0 md:px-8 py-8">
               <div className="text-[11px] uppercase tracking-[0.14em] font-semibold text-neutral-600">
-                Buyer-side fee
+                With every purchase
               </div>
-              <div className="mt-2 text-5xl font-bold tracking-tight">2%</div>
-              <div className="mt-1 text-[12px] text-neutral-500">at close · vs 5–6% broker</div>
-            </div>
-            <div className="col-span-12 md:col-span-3 px-6 md:px-8 py-8">
-              <div className="text-[11px] uppercase tracking-[0.14em] font-semibold text-neutral-600">
-                Coverage
+              <div className="mt-2 text-3xl md:text-4xl font-bold tracking-tight leading-[1.05]">
+                Architectural rendering &amp; CDs included.
               </div>
-              <div className="mt-2 text-5xl font-bold tracking-tight">USA</div>
-              <div className="mt-1 text-[12px] text-neutral-500">PJM · ERCOT · BPA · MISO · APS</div>
+              <div className="mt-2 text-[13px] leading-[1.55] text-neutral-700">
+                Construction documents and a site rendering ship with the
+                close — straight to the GC.
+              </div>
             </div>
           </div>
         </div>
       </section>
 
+      {/* VALUE GRID — four columns, hairline separation only. */}
       <section className="border-b border-[var(--color-rule)]">
         <div className="mx-auto max-w-7xl px-6 lg:px-10 py-24 grid grid-cols-12 gap-6">
           <div className="col-span-12 md:col-span-2">
@@ -125,15 +121,33 @@ export default async function HomePage() {
           </div>
           <div className="col-span-12 md:col-span-10">
             <div className="grid grid-cols-1 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[var(--color-rule)]">
-              <ValueProp kicker="Demand-first" headline="Built for AI Data Center developers writing checks today." body="Hyperscalers, AI labs, and HPC operators source through Livio Land because every parcel comes with the data their underwriting team needs — not a broker phone number." first />
-              <ValueProp kicker="Vetted supply" headline="MW, PPA status, interconnection stage on file." body="Every listing has photos, acreage, deliverable MW, signed-or-pending PPA price, and an LGIA / facility-study status. If a parcel doesn't have what your IC needs, you'll know before you click in." />
-              <ValueProp kicker="MNDA-first" headline="Sellers sign MNDA + non-circumvention before they list." body="Read site details without telling sellers what you're building. Every owner signed Livio's Mutual NDA + non-circumvention before getting on the platform." />
-              <ValueProp kicker="2% — at close" headline="A success fee that doesn't show up in the LOI." body="Buyer-side success fee is 2% of total Transaction value, owed only when a definitive agreement is signed. Vs. 5–6% to a traditional broker. Seller-side fee is a separate 2%." />
+              <ValueProp
+                kicker="Demand-first"
+                headline="Built for AI Data Center developers writing checks today."
+                body="Hyperscalers, AI labs, and HPC operators source through Livio Land because every parcel comes with the data their underwriting team needs — not a broker phone number."
+                first
+              />
+              <ValueProp
+                kicker="Vetted supply"
+                headline="MW, PPA status, interconnection stage on file."
+                body="Every listing has photos, acreage, deliverable MW, signed-or-pending PPA price, and an LGIA / facility-study status. If a parcel doesn't have what your IC needs, you'll know before you click in."
+              />
+              <ValueProp
+                kicker="MNDA-first"
+                headline="Sellers sign MNDA + non-circumvention before they list."
+                body="Read site details without telling sellers what you're building. Every owner signed Livio's Mutual NDA + non-circumvention before getting on the platform."
+              />
+              <ValueProp
+                kicker="2% — at close"
+                headline="A success fee that doesn't show up in the LOI."
+                body="Buyer-side success fee is 2% of total Transaction value, owed only when a definitive agreement is signed. Vs. 5–6% to a traditional broker. Seller-side fee is a separate 2%."
+              />
             </div>
           </div>
         </div>
       </section>
 
+      {/* TWO-SIDED — buyer panel primary, landowner panel secondary. */}
       <section>
         <div className="mx-auto max-w-7xl px-6 lg:px-10 py-24 grid grid-cols-12 gap-6">
           <div className="col-span-12 md:col-span-2">
@@ -142,34 +156,60 @@ export default async function HomePage() {
             </div>
           </div>
           <div className="col-span-12 md:col-span-10 grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[var(--color-rule)]">
+            {/* Buyer panel */}
             <div className="md:pr-12 pb-12 md:pb-0">
               <div className="text-[11px] uppercase tracking-[0.14em] font-semibold text-emerald-700">
                 Primary
               </div>
-              <h2 className="mt-3 text-3xl md:text-4xl font-bold tracking-tight leading-tight">For AI Data Center developers</h2>
-              <p className="mt-4 text-[15px] leading-[1.6] text-neutral-700">Stop sourcing through brokers and back-channel intros. Specify your MW, region, PPA price ceiling, and interconnection-stage requirements — Livio Land surfaces utility-ready parcels that already match.</p>
+              <h2 className="mt-3 text-3xl md:text-4xl font-bold tracking-tight leading-tight">
+                For AI Data Center developers
+              </h2>
+              <p className="mt-4 text-[15px] leading-[1.6] text-neutral-700">
+                Stop sourcing through brokers and back-channel intros. Specify
+                your MW, region, PPA price ceiling, and interconnection-stage
+                requirements — Livio Land surfaces utility-ready parcels that
+                already match.
+              </p>
               <ul className="mt-8 space-y-3 text-[14px] leading-[1.55] text-neutral-800">
                 <Item>Filter by MW, state, PPA status, interconnection stage, water, fiber</Item>
                 <Item>Read public Q&amp;A from other AI Data Center developers about each site</Item>
                 <Item>Ask the questions that matter — water rights, zoning, energization timeline</Item>
                 <Item>2% buyer-side success fee at close — paid only on a deal that goes through</Item>
               </ul>
-              <Link href="/listings/land" className="mt-10 inline-block bg-emerald-700 px-5 py-3 text-[14px] font-medium text-white hover:bg-emerald-800">Start sourcing sites →</Link>
+              <Link
+                href="/listings/land"
+                className="mt-10 inline-block bg-emerald-700 px-5 py-3 text-[14px] font-medium text-white hover:bg-emerald-800"
+              >
+                Start sourcing sites →
+              </Link>
             </div>
 
+            {/* Landowner panel */}
             <div className="md:pl-12 pt-12 md:pt-0">
               <div className="text-[11px] uppercase tracking-[0.14em] font-semibold text-neutral-500">
                 Secondary
               </div>
-              <h2 className="mt-3 text-3xl md:text-4xl font-bold tracking-tight leading-tight">For landowners</h2>
-              <p className="mt-4 text-[15px] leading-[1.6] text-neutral-700">The AI Data Center developers and hyperscalers shopping on Livio Land are searching for parcels right now. Listing here puts your site directly in front of the buyers — without a broker taking 5%.</p>
+              <h2 className="mt-3 text-3xl md:text-4xl font-bold tracking-tight leading-tight">
+                For landowners
+              </h2>
+              <p className="mt-4 text-[15px] leading-[1.6] text-neutral-700">
+                The AI Data Center developers and hyperscalers shopping on Livio
+                Land are searching for parcels right now. Listing here puts your
+                site directly in front of the buyers — without a broker taking
+                5%.
+              </p>
               <ul className="mt-8 space-y-3 text-[14px] leading-[1.55] text-neutral-800">
                 <Item>List acres, available MW, PPA status, interconnection stage</Item>
                 <Item>Upload site photos, drone shots, surveys, utility LOIs</Item>
                 <Item>Answer buyer questions publicly — build trust, save time on intros</Item>
                 <Item>2% seller-side fee at close — the lowest in the market</Item>
               </ul>
-              <Link href="/list" className="mt-10 inline-block border border-[var(--color-text)] px-5 py-3 text-[14px] font-medium text-[var(--color-text)] hover:bg-[var(--color-text)] hover:text-[var(--color-bg)]">List your land →</Link>
+              <Link
+                href="/list"
+                className="mt-10 inline-block border border-[var(--color-text)] px-5 py-3 text-[14px] font-medium text-[var(--color-text)] hover:bg-[var(--color-text)] hover:text-[var(--color-bg)]"
+              >
+                List your land →
+              </Link>
             </div>
           </div>
         </div>
@@ -178,20 +218,39 @@ export default async function HomePage() {
   );
 }
 
-function ValueProp({ kicker, headline, body, first }: { kicker: string; headline: string; body: string; first?: boolean }) {
+function ValueProp({
+  kicker,
+  headline,
+  body,
+  first,
+}: {
+  kicker: string;
+  headline: string;
+  body: string;
+  first?: boolean;
+}) {
   return (
     <div className={`px-0 py-8 md:py-0 ${first ? "md:pr-8" : "md:px-8"}`}>
-      <div className="text-[11px] uppercase tracking-[0.14em] font-semibold text-emerald-700">{kicker}</div>
-      <div className="mt-3 text-[18px] font-semibold leading-snug text-[var(--color-text)]">{headline}</div>
+      <div className="text-[11px] uppercase tracking-[0.14em] font-semibold text-emerald-700">
+        {kicker}
+      </div>
+      <div className="mt-3 text-[18px] font-semibold leading-snug text-[var(--color-text)]">
+        {headline}
+      </div>
       <div className="mt-3 text-[13px] leading-[1.6] text-neutral-600">{body}</div>
     </div>
   );
 }
 
+// Swiss list marker: 4×4 black square, not a checkmark. Sits aligned to the
+// cap-height of the first line of text via flex baseline.
 function Item({ children }: { children: React.ReactNode }) {
   return (
     <li className="flex gap-3">
-      <span aria-hidden className="mt-2 inline-block h-[6px] w-[6px] bg-emerald-700 shrink-0" />
+      <span
+        aria-hidden
+        className="mt-2 inline-block h-[6px] w-[6px] bg-emerald-700 shrink-0"
+      />
       <span>{children}</span>
     </li>
   );
