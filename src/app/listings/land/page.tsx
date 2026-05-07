@@ -171,37 +171,37 @@ export default async function LandListingsPage({ searchParams }: Props) {
 
   return (
     <div>
-      {/* HERO STRIP — eyebrow + title + AI search. Filters and map come
-          AFTER this, full-width across the page. */}
-      <section className="border-b border-[var(--color-rule)]">
-        <div className="mx-auto max-w-7xl px-6 lg:px-10 pt-12 pb-8 grid grid-cols-12 gap-6">
-          <div className="col-span-12 md:col-span-2">
-            <div className="text-[11px] uppercase tracking-[0.18em] font-semibold">
-              02 / Browse
-            </div>
-          </div>
-          <div className="col-span-12 md:col-span-10">
-            <div className="text-[11px] uppercase tracking-[0.16em] font-semibold text-neutral-600">
+      {/* HERO — centered, pill chips, big split title, AI search inline.
+          Same pattern as the homepage hero. */}
+      <section className="border-b border-[var(--color-rule)] bg-gradient-to-b from-white via-emerald-50/30 to-white">
+        <div className="mx-auto max-w-5xl px-6 lg:px-10 pt-16 pb-12 text-center">
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-3.5 py-1 text-[12px] font-medium text-emerald-900">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
               {listings.length} {listings.length === 1 ? "site" : "sites"} ·{" "}
-              {Math.round(listings.reduce((s, l) => s + l.availableMW, 0))} MW total ·{" "}
-              MNDA-protected
-            </div>
-            <h1 className="mt-4 text-4xl md:text-5xl font-bold tracking-tight leading-[1.05]">
-              Powered land,{" "}
-              <span className="text-emerald-700">on the map.</span>
-            </h1>
-            <p className="mt-4 max-w-[58ch] text-[15px] leading-[1.6] text-neutral-700">
-              Every utility-ready parcel currently listed on Livio Land. Pan the map,
-              filter by MW and PPA status, or describe your ideal site in plain English
-              and let AI rank them for you.
-            </p>
-            <div className="mt-6">
-              <AiSearch variant="compact" defaultValue={f.aiq ?? ""} />
-            </div>
-            {parsedAi && (
-              <AiQuerySummary parsed={parsedAi} originalQuery={f.aiq ?? ""} />
-            )}
+              {Math.round(listings.reduce((s, l) => s + l.availableMW, 0))} MW total
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-full bg-emerald-700 px-3.5 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white">
+              <span aria-hidden>✦</span> MNDA-protected
+            </span>
           </div>
+          <h1 className="mt-7 text-5xl md:text-6xl font-bold tracking-tight leading-[1.02]">
+            Powered land,{" "}
+            <span className="text-emerald-700">on the map.</span>
+          </h1>
+          <p className="mx-auto mt-5 max-w-[60ch] text-[16px] leading-[1.6] text-neutral-700">
+            Every utility-ready parcel currently listed on Livio Land. Pan the
+            map, filter by MW and PPA status, or describe your ideal site in
+            plain English and let AI rank them for you.
+          </p>
+          <div className="mt-8">
+            <AiSearch variant="compact" defaultValue={f.aiq ?? ""} />
+          </div>
+          {parsedAi && (
+            <div className="mt-4 text-left">
+              <AiQuerySummary parsed={parsedAi} originalQuery={f.aiq ?? ""} />
+            </div>
+          )}
         </div>
       </section>
 
@@ -232,9 +232,9 @@ export default async function LandListingsPage({ searchParams }: Props) {
             </div>
             <Link
               href="/listings/new/land"
-              className="inline-flex items-center gap-1.5 bg-emerald-700 px-4 py-2 text-[13px] font-medium text-white hover:bg-emerald-800 transition"
+              className="inline-flex items-center gap-1.5 rounded-full bg-emerald-700 px-5 py-2.5 text-[13px] font-medium text-white hover:bg-emerald-800 transition"
             >
-              + List land
+              + List land <span aria-hidden>→</span>
             </Link>
           </div>
 
@@ -422,4 +422,4 @@ function AiQuerySummary({
     </div>
   );
 }
-
+—
