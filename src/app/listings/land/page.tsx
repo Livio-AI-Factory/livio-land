@@ -285,48 +285,17 @@ export default async function LandListingsPage({ searchParams }: Props) {
                   while the user scans the list. */}
               <div className="col-span-12 lg:col-span-5">
                 <div className="lg:sticky lg:top-6">
-                  <MapWindow listings={mapListings} apiKey={mapsKey} />
+                  <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+                    <div className="h-[640px] w-full">
+                      <ListingsMap listings={mapListings} apiKey={mapsKey} layout="split" />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           )}
         </div>
       </section>
-    </div>
-  );
-}
-
-/** Mac-style window chrome wrapping the Google Map — pulls the
- * grid.golivio.com 3D-viewer presentation pattern over to Land. The
- * traffic-light dots, URL bar, and "Open map" anchor are pure decoration
- * but they immediately read as "this is the live, primary feature."
- */
-function MapWindow({
-  listings,
-  apiKey,
-}: {
-  listings: import("@/components/listings-map").MapListing[];
-  apiKey: string | null;
-}) {
-  return (
-    <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
-      <div className="flex items-center gap-3 border-b border-neutral-200 bg-neutral-50 px-4 py-2.5">
-        <div className="flex gap-1.5">
-          <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
-          <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
-          <span className="h-3 w-3 rounded-full bg-[#28c840]" />
-        </div>
-        <div className="flex-1 text-center text-[11px] tracking-[0.06em] text-neutral-500 font-medium">
-          land.golivio.com · live map · {listings.length} site{listings.length === 1 ? "" : "s"} · drag to pan
-        </div>
-        <div className="text-[11px] text-emerald-700 font-semibold">● live</div>
-      </div>
-      <div className="h-[640px] w-full">
-        <ListingsMap listings={listings} apiKey={apiKey} layout="split" />
-      </div>
-      <div className="border-t border-neutral-200 bg-neutral-50 px-4 py-2 text-[11px] text-neutral-500">
-        Pins show approximate state centroid · click for site details · per-listing geocoding next.
-      </div>
     </div>
   );
 }
