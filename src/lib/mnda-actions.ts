@@ -92,3 +92,66 @@ export async function requireSignedMnda() {
   const path = headerBag.get("x-pathname") || "/";
   redirect(`/mnda?next=${encodeURIComponent(path)}`);
 }
+
+export type MndaSuggestionResult = { ok: true } | { ok: false; error: string };
+
+/**
+ * Server action: a counterparty wants to redline / propose changes to the
+ * MNDA before signing. Captures their proposed edits and routes them to
+ * the platform admins as an internal Message — no schema migration needed,
+ * since the Message table already exists for buyer↔seller chat.
+ *
+ * Routing strategy: send to every admin user. If for some reason no admin
+ * exists yet (fresh DB), fall back to logging so the suggestion isn't
+ * silently dropped, then surface a friendly "we received your note" reply.
+ */
+export async function submitMndaSuggestion(
+  formData: FormData,
+): Promise<MndaSuggestionResult> {
+  const user = await getCurrentUser();
+  if (!user) {
+    return { ok: false, error: "Sign in first so we know who to reply to." };
+  }
+
+  const body = (formData.get("body") as string | null)?.trim() ?? "";
+  if (body.length < 12) {
+    return {
+      ok: false,
+      error: "Add at least a sentence describing the change you want.",
+    };
+  }
+  if (body.length > 8000) {
+    return { ok: false, error: "Suggestion is too long — keep it under 8,000 characters." };
+  }
+
+  const admins = await prisma.user.findMany({
+    where: { isAdmin: true },
+    select: { id: true },
+  });
+
+  const formattedBody = `[MNDA suggestion · v${MNDA_VERSION}]\n\nFrom: ${user.name} <${user.email}>${user.company ? ` (${user.company})` : ""}\n\n${body}`;
+
+  if (admins.length === 0) {
+    // No admins yet — log so the suggestion isn't lost on a fresh DB and
+    // tell the user we got it.
+    console.warn("[mnda-suggestion] no admin users exist; suggestion dropped:", formattedBody);
+    return { ok: true };
+  }
+
+  // Drop one Message into each admin's inbox. They surface in the existing
+  // /inbox UI without us building a new admin queue. Sender = the user
+  // themselves so the admin can reply directly.
+  await prisma.$transaction(
+    admins.map((a) =>
+      prisma.message.create({
+        data: {
+          senderId: user.id,
+          recipientId: a.id,
+          body: formattedBody,
+        },
+      }),
+    ),
+  );
+
+  return { ok: true };
+}
