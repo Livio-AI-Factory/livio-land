@@ -9,6 +9,13 @@
 // jitter so multiple listings in the same state don't stack). When we
 // later add per-listing geocoding, the same component takes precise
 // lat/long via props instead.
+//
+// Layout modes:
+//   - "fixed":  card-style with chrome — used when the map is the whole
+//               feature (legacy ?view=map URL).
+//   - "split":  fills its parent box edge-to-edge — used when the map sits
+//               next to the listings list in the split view, where the
+//               parent already provides the rounded chrome.
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -64,12 +71,36 @@ function loadMaps(apiKey: string): Promise<void> {
   return window.__livioMapsLoading;
 }
 
+// Soft, low-saturation map style — keeps emerald pins as the only loud
+// element on screen. Loosely inspired by the "Snazzy / Subtle Grayscale"
+// preset: roads pulled back to slate, water muted to a calm blue-grey,
+// labels demoted so the data points pop.
+const MAP_STYLE: object[] = [
+  { elementType: "geometry", stylers: [{ color: "#f5f6f7" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#6b7280" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#ffffff" }] },
+  { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#cbd5e1" }] },
+  { featureType: "administrative.land_parcel", stylers: [{ visibility: "off" }] },
+  { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#e5e7eb" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#d1d5db" }] },
+  { featureType: "road.arterial", elementType: "labels", stylers: [{ visibility: "off" }] },
+  { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "off" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#dbeafe" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#64748b" }] },
+];
+
 export function ListingsMap({
   listings,
   apiKey,
+  layout = "fixed",
+  height,
 }: {
   listings: MapListing[];
   apiKey: string | null;
+  layout?: "fixed" | "split";
+  height?: string;
 }) {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -90,6 +121,7 @@ export function ListingsMap({
           mapTypeControl: false,
           streetViewControl: false,
           fullscreenControl: false,
+          styles: MAP_STYLE,
         });
 
         const infoWindow = new window.google.maps.InfoWindow({});
@@ -105,10 +137,10 @@ export function ListingsMap({
             icon: {
               path: window.google!.maps.SymbolPath?.CIRCLE ?? 0,
               fillColor: "#047857",
-              fillOpacity: 0.9,
+              fillOpacity: 0.95,
               strokeColor: "#ffffff",
-              strokeWeight: 2,
-              scale: 9,
+              strokeWeight: 2.5,
+              scale: 10,
             },
           });
           marker.addListener("click", () => {
@@ -148,26 +180,46 @@ export function ListingsMap({
 
   if (error === "missing-key") {
     return (
-      <div className="rounded-xl border border-dashed border-amber-300 bg-amber-50 p-6 text-sm text-amber-900">
-        <strong className="font-semibold">Map view needs a Google Maps API key.</strong>
-        <div className="mt-2">
-          Set <code className="rounded bg-amber-100 px-1.5 py-0.5 font-mono text-xs">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code>{" "}
-          in Railway → livio-land → Variables, then redeploy. Until then, use grid view.
+      <div className="rounded-xl border border-dashed border-amber-300 bg-amber-50 p-6 text-sm text-amber-900 h-full flex items-center justify-center">
+        <div>
+          <strong className="font-semibold">Map view needs a Google Maps API key.</strong>
+          <div className="mt-2">
+            Set <code className="rounded bg-amber-100 px-1.5 py-0.5 font-mono text-xs">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code>{" "}
+            in Railway → livio-land → Variables, then redeploy.
+          </div>
         </div>
       </div>
     );
   }
   if (error) {
     return (
-      <div className="rounded-xl border border-dashed border-red-300 bg-red-50 p-6 text-sm text-red-900">
-        Couldn&apos;t load the map: {error}. Switch to grid view or reload.
+      <div className="rounded-xl border border-dashed border-red-300 bg-red-50 p-6 text-sm text-red-900 h-full flex items-center justify-center">
+        Couldn&apos;t load the map: {error}.
       </div>
     );
   }
 
+  // Split mode — used inside the split-view shell, which already has its
+  // own chrome. Map fills its parent edge-to-edge.
+  if (layout === "split") {
+    return (
+      <>
+        <div ref={mapRef} className="h-full w-full" style={height ? { height } : undefined} />
+        <ul className="sr-only">
+          {listings.map((l) => (
+            <li key={l.id}>
+              <Link href={`/listings/land/${l.id}`}>{l.title}</Link>
+            </li>
+          ))}
+        </ul>
+      </>
+    );
+  }
+
+  // Fixed (legacy) mode — full-width card with chrome and footnote.
   return (
     <div className="rounded-xl border border-neutral-200 bg-white overflow-hidden">
-      <div ref={mapRef} className="h-[560px] w-full" />
+      <div ref={mapRef} className="h-[560px] w-full" style={height ? { height } : undefined} />
       <div className="border-t border-neutral-200 bg-neutral-50 px-4 py-2 text-[11px] text-neutral-500">
         Pins show approximate state centroid — click for site details. Per-listing precision shipping after geocoding rolls out.
       </div>
@@ -181,3 +233,4 @@ export function ListingsMap({
     </div>
   );
 }
+
